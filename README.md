@@ -13,3 +13,7 @@ when they are more accurate, the trials will speed up.
 after exp_duration minutes, the experiment will end. 
 
 A psychomotor vigilance task is yet to be added to this experiment. 
+
+In the 'tryout code' there is a smaller, simpler version that runs on your local computer (not a server). 
+
+To make this code work, you need to download JsPsych 6.3.0 and save it in this map as 'jspsych'

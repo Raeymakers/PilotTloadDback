@@ -16,4 +16,5 @@ A psychomotor vigilance task is yet to be added to this experiment.
 
 In the 'tryout code' there is a smaller, simpler version that runs on your local computer (not a server). 
 
-To make this code work, you need to download JsPsych 6.3.0 and save it in this map as 'jspsych'
+To make this code work, you need to either download JsPsych 6.3.0 and save it in this map as 'jspsych', 
+or add the files 'css', 'extensions' 'plugins' and 'jspsych', 'licence' to a file named 'jspsych'

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My experiment</title>
+    <script src="jspsych/jspsych.js"></script>
+    <script src="jspsych/plugins/jspsych-html-keyboard-response.js"></script> //jspsych 6.30
+    <script src="jspsych/plugins/jspsych-image-keyboard-response.js"></script>
+    <script src="jspsych/plugins/jspsych-html-button-response.js"></script>
+    <script src="jspsych/plugins/jspsych-preload.js"></script>
+    <link href="jspsych/css/jspsych.css" rel="stylesheet" type="text/css">
+  </head>
+  <body></body>
+  <script>
+    //jspsych 6.30
+    
+
+    /* create timeline */
+    var timeline = [];
+
+    var startTime, endTime;
+
+    Nblocks= 1; //this is not that important, since the experiment will always end after exp_duration
+    trial_gap = 200;
+    trial_dur= 500;
+    var accuracy_percentage = [0.75, 0.70, 0.65, 0.60, 0.55]; //possible percentages for pilot
+    var exp_duration= 0.1; // how many minutes experiment may last 
+    var how_many_back = 2; // this is an N-back task
+    var repeat = true;
+
+
+    var pic;
+    var sequence = [];
+
+    var how_many_back = 2;
+
+
+    /*********** define images used ***********/
+
+
+    // different colored images
+    var images = ['img/blue.png', 'img/red.png', 'img/yellow.png', 'img/green.png', 'img/pink.png', 'img/purple.png', 'img/black.png', 'img/white.png','img/comb.png', 'img/glass.png', 'img/pear.png', 'img/key.png','img/elephant.png', 'img/house.png', 'img/truck.png', 'img/plane.png'];
+
+    // all images used in the current experiment; these images will be pre-loaded at the beginning of the experiment
+
+    var all_images = [];
+
+
+    var instructions_1 = {
+      type: 'html-button-response',
+      stimulus: '<div style="width: 800px;">'+
+        '<p>This experiment will test your ability to hold information in short-term, temporary memory. This is called working memory.</p>'+
+        '</div>',
+      choices: ["Continue"]
+    };
+    timeline.push(instructions_1);
+
+    var instructions_2 = {
+      type: 'html-button-response',
+      stimulus: '<div style="width: 800px;">'+
+        '<p>You will see a sequence of images. Your task is to determine if the image on the screen matches '+
+        'the image that appeared two images before.</p>'+
+        '<p>If the images is match <span style="font-weight: bold;">press the J key.</span></p>'+
+        '<p>For example, if you saw the sequence X, O, V, X, V, O, you would press the J key when the second V appeared on the screen.</p>'+
+        '<p>You do not need to press any key when there is not a match.</p>'+
+        '</div>',
+      choices: ["Continue"],
+      on_finish: function () {
+        accuracy_percentage = jsPsych.randomization.sampleWithReplacement(accuracy_percentage, 1); // choose random accuracy percentage
+        console.log (accuracy_percentage);
+        startTime = new Date(); //start clock
+      },
+    };
+    timeline.push(instructions_2);
+
+
+    var n_back_trial = {
+      type: 'image-keyboard-response',
+      stimulus: function() {
+        if(sequence.length < how_many_back){
+          var pic = jsPsych.randomization.sampleWithoutReplacement(images, 1)[0] //pick a random image
+        } else {
+          if(jsPsych.timelineVariable('match', true) == true){ //on match trials, the pic is the same as the pic (how_many_back)
+            var pic = sequence[sequence.length - how_many_back];
+          } else {
+            var possible_images = jsPsych.randomization.sampleWithoutReplacement(images, 2);
+            if(possible_images[0] != sequence[sequence.length - how_many_back]){
+              var pic = possible_images[0];
+            } else {
+              var pic = possible_images[1];
+            }
+          }
+        }
+        sequence.push(pic);
+        return pic
+      },
+      choices: ['j'],
+      trial_duration: trial_dur,
+      post_trial_gap: trial_gap,
+      response_ends_trial: false,
+      data: {
+        match: jsPsych.timelineVariable('match'),
+        phase: 'test',
+        correct_resp: jsPsych.timelineVariable('correct_resp'), 
+      },
+      on_finish: function(data){
+        var acc = false;
+        if (data.response == data.correct_resp ) {
+          acc= true;
+        }
+        data.accuracy= acc;
+        console.log('correct_resp:',data.correct_resp);
+        console.log('response:',data.response);
+        console.log('accuracy:',data.accuracy);
+        var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
+        var n_correct = last_trials.filter({accuracy:true}).count();
+        data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
+        if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
+          trial_dur = trial_dur - 25
+        } else if (data.prop_correct <accuracy_percentage) {
+          trial_dur= trial_dur +25
+        };
+        console.log('prop_correct:',data.prop_correct)
+        console.log ('trial_dur:',trial_dur);
+        endTime = new Date();
+        var timeDiff = endTime - startTime;
+        timeDiff /=1000;
+        var minutes = (timeDiff)/60;
+        console.log('minutes passed:',minutes);
+        data.minutes = minutes;
+        if (minutes > exp_duration){
+          repeat = false
+        };
+        console.log('repeat:',repeat);
+      }
+    }
+
+
+
+    //message to inform participant of a mistake
+    var feedback_message = {
+      type: 'html-keyboard-response',
+      stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 200
+    };
+    
+    //conditional to determine whether or not to display message based on accuracy trial
+    var feedback_cond = {
+      timeline: [feedback_message],
+      conditional_function: function() {
+        var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
+        var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
+        console.log('accuracy:', accuracy);
+        console.log('trial_index:', trial_index);
+        if(accuracy==true) {
+          return false;
+        } else if (trial_index<4) {
+          return false;
+        }
+      }
+    };
+    
+
+    
+    /********************************************************
+    add individual events into the timeline variable
+    ********************************************************/
+
+    var n_back_trials = [  
+      {match: true, correct_resp: 'j'},
+      {match: false, correct_resp: null}
+    ];
+
+    var n_back_sequence = {
+      timeline: [n_back_trial, feedback_cond],
+      timeline_variables: n_back_trials,
+      repetitions: Nblocks,
+      sample: {
+        type: 'with-replacement',
+        size: images.length,
+        weights: [2, 1]
+      },
+      loop_function: function(){
+        if (repeat == true) {
+          return true
+        } else {
+          return false
+        }
+      }
+    }
+    timeline.push(n_back_sequence);
+
+
+    /* start the experiment */
+    jsPsych.init({
+        timeline: timeline,
+        preload_images: images,
+        on_finish: function() {
+        jsPsych.data.displayData()}
+    });
+  </script>
+</html>

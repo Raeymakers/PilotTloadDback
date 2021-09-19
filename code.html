@@ -2,12 +2,22 @@
 <html>
   <head>
     <title>Pilot TloadDback</title>
-    <script src="jspsych/jspsych.js"></script>
-    <script src="jspsych/plugins/jspsych-html-keyboard-response.js"></script>
-    <script src="jspsych/plugins/jspsych-image-keyboard-response.js"></script>
-    <script src="jspsych/plugins/jspsych-html-button-response.js"></script>
-    <script src="jspsych/plugins/jspsych-preload.js"></script>
-    <link href="jspsych/css/jspsych.css" rel="stylesheet" type="text/css">
+    <script src="js/jspsych/jspsych.js"></script>
+    <script src="js/jspsych/plugins/jspsych-fullscreen.js"></script>
+    <script src="js/jspsych/plugins/jspsych-instructions.js"></script>
+    <script src="js/jspsych/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="js/jspsych/plugins/jspsych-html-keyboard-multi-response.js"></script>
+    <script src="js/jspsych/plugins/jspsych-image-keyboard-response.js"></script>
+    <script src="js/jspsych-/plugins/jspsych-image-button-response.js"></script>
+    <script src="js/jspsych/plugins/jspsych-html-button-response.js"></script>
+    <script src="js/jspsych/plugins/jspsych-survey-multi-choice.js"></script>
+    <script src="js/jspsych/plugins/jspsych-survey-likert.js"></script>
+    <script src="js/jspsych/plugins/jspsych-survey-text-beta-6.1.js"></script>
+    <script src="js/jspsych/plugins/jspsych-preload.js"></script>
+    <script src="js/jquery-1.7.1.min.js"></script> <!-- the jquery library is used to communicate with the server (to store the data) through "AJAX" and PHP -->
+    <script src="js/bowser.js"></script>  <!-- <script src="configurations/UPPSP.js"></script> -->
+    <script scr="otherJS/jquery-1.7.1.min.js"></script>
+    <link href="js/jspsych/css/jspsych.css" rel="stylesheet" type="text/css">
   </head>
   <body></body>
   <script>
@@ -43,6 +53,14 @@
     var all_images = [];
 
 
+    // is the experiment running from a server or not? (this determines if data is saved on server or offline)
+    if (document.location.host) { // returns your host or null
+      var online = true;
+    } else {
+      var online = false;
+    };
+
+
 
     /********************************************************
     define the individual events that make up the experiment
@@ -53,6 +71,9 @@
 
     var welcome_message = ['<p>Welkom bij dit experiment.</p>' + '<p> Duw op Volgende om te beginnen.</p>'];
     var not_supported_message = ['<p>This experiment requires the Chrome or Firefox webbrowser.</p>'];
+
+
+
 
     var welcome = {
       type: "instructions",
@@ -146,7 +167,7 @@
     };
 
     // informed consent and demographic information
-    var consent_demo = [welcome, consent, ask_name, fullscreen_mode, age_nationality, instructions];
+    var consent_demo = (welcome, consent, ask_name, fullscreen_mode, age_nationality, instructions);
 
 
 
@@ -299,12 +320,6 @@
       });
     };
 
-    // create a string that contains extra information to be saved
-    var extra_info_string = '';
-
-    for (var i = 0; i < extra_info.length; i ++) {
-      extra_info_string += extra_info[i] + ',';
-    }
 
     // add the data that need to be saved
     var data_string = '';
@@ -336,7 +351,7 @@
                          data.prop_correct + ',' + data.minutes + '\n';
           appendData('PilotTloadDback_main_'+ subjID +'.csv', data_row);
         }
-      },
+      }
     },
         on_finish: function() { //if not online it will save all data locally
         if (!online){

@@ -58,11 +58,8 @@
     // different pictures
     var pics = ['img/comb.png', 'img/glass.png', 'img/pear.png', 'img/key.png','img/elephant.png', 'img/house.png', 'img/truck.png', 'img/plane.png'];
 
-    // all images used in the current experiment; these images will be pre-loaded at the beginning of the experiment
-
-    var all_images = [];
-
-
+    // all images that will be preloaded at start experiment
+    var all_images =['img/blue.png', 'img/red.png', 'img/yellow.png', 'img/green.png', 'img/pink.png', 'img/purple.png', 'img/black.png', 'img/white.png','img/comb.png', 'img/glass.png', 'img/pear.png', 'img/key.png','img/elephant.png', 'img/house.png', 'img/truck.png', 'img/plane.png'];
 
     /********************************************************
     define the individual events that make up the experiment
@@ -174,8 +171,27 @@
 
     /**************  ACTUAL EXPERIMENT ***************/
 
-    /** trial **/
-    var n_back_trial = {
+    /** pic trial **/
+
+    var test_stimuli = [
+      { stimulus: "img/blue.png"},
+      { stimulus: "img/orange.png"}
+    ];
+
+    var big_trial = {
+      type: jsPsychImageKeyboardResponse,
+      stimulus: 'img/blue.png',
+      choices: ['f', 'j']
+    };
+
+    var small_trial = {
+      type: jsPsychImageKeyboardResponse,
+      stimulus: 'img/orange.png',
+      choices: ['f', 'j']
+    };
+
+    /** color trial **/
+    var color_trial = {
       type: 'image-keyboard-response',
       stimulus: function() {
         if(sequence.length < how_many_back){
@@ -236,30 +252,30 @@
       }
     }
 
-    /** error message **/
-    //message to inform participant of a mistake
-    var feedback_message = {
-      type: 'html-keyboard-response',
-      stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
-      choices: jsPsych.NO_KEYS,
-      trial_duration: 200
-    };
+    // /** error message **/
+    // //message to inform participant of a mistake
+    // var feedback_message = {
+    //   type: 'html-keyboard-response',
+    //   stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
+    //   choices: jsPsych.NO_KEYS,
+    //   trial_duration: 200
+    // };
     
-    //conditional to determine whether or not to display message based on accuracy trial
-    var feedback_cond = {
-      timeline: [feedback_message],
-      conditional_function: function() {
-        var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
-        var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
-        console.log('accuracy:', accuracy);
-        console.log('trial_index:', trial_index);
-        if(accuracy==true) {
-          return false;
-        } else if (trial_index<4) {
-          return false;
-        }
-      }
-    };
+    // //conditional to determine whether or not to display message based on accuracy trial
+    // var feedback_cond = {
+    //   timeline: [feedback_message],
+    //   conditional_function: function() {
+    //     var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
+    //     var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
+    //     console.log('accuracy:', accuracy);
+    //     console.log('trial_index:', trial_index);
+    //     if(accuracy==true) {
+    //       return false;
+    //     } else if (trial_index<4) {
+    //       return false;
+    //     }
+    //   }
+    // };
     
     /** construct timeline **/
     var n_back_trials = [  
@@ -268,7 +284,7 @@
     ];
 
     var n_back_sequence = {
-      timeline: [n_back_trial, feedback_cond],
+      timeline: [color_trial],
       timeline_variables: n_back_trials,
       repetitions: Nblocks,
       sample: {
@@ -311,18 +327,18 @@
     timeline.push(n_back_sequence);
     timeline.push(final_debrief);
 
-    /**** function that appends data to an existing file (or creates the file if it does not exist) *****/
-    function appendData(filename, filedata) {
-      $.ajax({ // make sure jquery-1.7.1.min.js is loaded in the html header for this to work
-        type: 'post',
-        cache: false,
-        url: 'php/save_data_append.php', // IMPORTANT: change the php script to link to the directory of your server where you want to store the data!
-        data: {
-          filename: filename,
-          filedata: filedata
-        },
-      });
-    };
+    // /**** function that appends data to an existing file (or creates the file if it does not exist) *****/
+    // function appendData(filename, filedata) {
+    //   $.ajax({ // make sure jquery-1.7.1.min.js is loaded in the html header for this to work
+    //     type: 'post',
+    //     cache: false,
+    //     url: 'php/save_data_append.php', // IMPORTANT: change the php script to link to the directory of your server where you want to store the data!
+    //     data: {
+    //       filename: filename,
+    //       filedata: filedata
+    //     },
+    //   });
+    // };
 
 
     // add the data that need to be saved
@@ -331,38 +347,38 @@
     /* start the experiment */
     jsPsych.init({
         timeline: timeline,
-        preload_images: images,
-      // see if participants are switching tabs/apps
-      on_interaction_data_update:function(data){
-        jsPsych.data.get().addToLast(data);
-      },
-      exclusions: {
-        min_width: 800,
-        min_height: 600
-      },
-      on_data_update: function(data){
-      if (online){
-        var subjID = jsPsych.data.get().last(1).values()[0]['subjID']; // get subjectID
-        if (data.trial_index == 2){ // write header
-          var data_row = "name_surname, age, nationality, trial_index, stimulus, response, match, correct_resp, accuracy, prop_correct, minutes\n";
-          appendData('PilotTloadDback_main'+ subjID +'.csv', data_row);
-        }
+        preload_images: all_images,
+    //   // see if participants are switching tabs/apps
+    //   on_interaction_data_update:function(data){
+    //     jsPsych.data.get().addToLast(data);
+    //   },
+    //   exclusions: {
+    //     min_width: 800,
+    //     min_height: 600
+    //   },
+    //   on_data_update: function(data){
+    //   if (online){
+    //     var subjID = jsPsych.data.get().last(1).values()[0]['subjID']; // get subjectID
+    //     if (data.trial_index == 2){ // write header
+    //       var data_row = "name_surname, age, nationality, trial_index, stimulus, response, match, correct_resp, accuracy, prop_correct, minutes\n";
+    //       appendData('PilotTloadDback_main'+ subjID +'.csv', data_row);
+    //     }
 
-        // append data when the task property in data is 'test'
-        if (data.phase == 'test'){
-          var data_row = data.name_surname + ',' + data.age + ',' + data.nationality + ',' + data.trial_index + ',' +
-                         data.stimulus + ',' + data.response + ',' + data.match + ',' + data.correct_resp + ',' + data.accuracy + ',' +
-                         data.prop_correct + ',' + data.minutes + '\n';
-          appendData('PilotTloadDback_main_'+ subjID +'.csv', data_row);
-        }
-      }
-    },
-        on_finish: function() { //if not online it will save all data locally
-        if (!online){
-          jsPsych.data.get().localSave('csv','mydata.csv');
-          jsPsych.data.displayData();
-        }
-    }
+    //     // append data when the task property in data is 'test'
+    //     if (data.phase == 'test'){
+    //       var data_row = data.name_surname + ',' + data.age + ',' + data.nationality + ',' + data.trial_index + ',' +
+    //                      data.stimulus + ',' + data.response + ',' + data.match + ',' + data.correct_resp + ',' + data.accuracy + ',' +
+    //                      data.prop_correct + ',' + data.minutes + '\n';
+    //       appendData('PilotTloadDback_main_'+ subjID +'.csv', data_row);
+    //     }
+    //   }
+    // },
+    //     on_finish: function() { //if not online it will save all data locally
+    //     if (!online){
+    //       jsPsych.data.get().localSave('csv','mydata.csv');
+    //       jsPsych.data.displayData();
+    //     }
+    // }
     });
   </script>
 </html>

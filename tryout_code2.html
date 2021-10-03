@@ -183,7 +183,7 @@
     ];
 
     var test = {
-      type: jsPsychImageKeyboardResponse,
+      type: 'image-keyboard-response',
       stimulus: jsPsych.timelineVariable('stimulus'),
       choices: ['f', 'j'],
       data: {
@@ -216,7 +216,7 @@
         sequence.push(pic);
         return pic
       },
-      choices: ['j'],
+      choices: ['j','f'],
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
       response_ends_trial: false,
@@ -362,37 +362,37 @@
     jsPsych.init({
         timeline: timeline,
         preload_images: all_images,
-    //   // see if participants are switching tabs/apps
-    //   on_interaction_data_update:function(data){
-    //     jsPsych.data.get().addToLast(data);
-    //   },
-    //   exclusions: {
-    //     min_width: 800,
-    //     min_height: 600
-    //   },
-    //   on_data_update: function(data){
-    //   if (online){
-    //     var subjID = jsPsych.data.get().last(1).values()[0]['subjID']; // get subjectID
-    //     if (data.trial_index == 2){ // write header
-    //       var data_row = "name_surname, age, nationality, trial_index, stimulus, response, match, correct_resp, accuracy, prop_correct, minutes\n";
-    //       appendData('PilotTloadDback_main'+ subjID +'.csv', data_row);
-    //     }
+      // see if participants are switching tabs/apps
+      on_interaction_data_update:function(data){
+        jsPsych.data.get().addToLast(data);
+      },
+      exclusions: {
+        min_width: 800,
+        min_height: 600
+      },
+      on_data_update: function(data){
+      if (online){
+        var subjID = jsPsych.data.get().last(1).values()[0]['subjID']; // get subjectID
+        if (data.trial_index == 2){ // write header
+          var data_row = "name_surname, age, nationality, trial_index, stimulus, response, match, correct_resp, accuracy, prop_correct, minutes\n";
+          appendData('PilotTloadDback_main'+ subjID +'.csv', data_row);
+        }
 
-    //     // append data when the task property in data is 'test'
-    //     if (data.phase == 'test'){
-    //       var data_row = data.name_surname + ',' + data.age + ',' + data.nationality + ',' + data.trial_index + ',' +
-    //                      data.stimulus + ',' + data.response + ',' + data.match + ',' + data.correct_resp + ',' + data.accuracy + ',' +
-    //                      data.prop_correct + ',' + data.minutes + '\n';
-    //       appendData('PilotTloadDback_main_'+ subjID +'.csv', data_row);
-    //     }
-    //   }
-    // },
-    //     on_finish: function() { //if not online it will save all data locally
-    //     if (!online){
-    //       jsPsych.data.get().localSave('csv','mydata.csv');
-    //       jsPsych.data.displayData();
-    //     }
-    // }
+        // append data when the task property in data is 'test'
+        if (data.phase == 'test'){
+          var data_row = data.name_surname + ',' + data.age + ',' + data.nationality + ',' + data.trial_index + ',' +
+                         data.stimulus + ',' + data.response + ',' + data.match + ',' + data.correct_resp + ',' + data.accuracy + ',' +
+                         data.prop_correct + ',' + data.minutes + '\n';
+          appendData('PilotTloadDback_main_'+ subjID +'.csv', data_row);
+        }
+      }
+    },
+        on_finish: function() { //if not online it will save all data locally
+        if (!online){
+          jsPsych.data.get().localSave('csv','mydata.csv');
+          jsPsych.data.displayData();
+        }
+    }
     });
   </script>
 </html>

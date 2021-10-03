@@ -21,8 +21,8 @@
   <body></body>
   <script>
 
-
-
+//// THIS VERSION has swit
+ 
     /********************************************************
     define some variables
     ********************************************************/
@@ -290,32 +290,32 @@
     
     /** construct timeline **/
 
-    var n_back_sequence = {
-      timeline: [color_trial, pic_trial],
-      timeline_variables: color_stimuli, pic_stimuli,
-      repetitions: Nblocks,
-      sample: {
-        type: 'with-replacement',
-        size: images.length,
-        weights: [2, 1]
-      },
-      loop_function: function(){
-        if (repeat == true) {
-          return true
-        } else {
-          return false
-        }
-      }
-    }
+    // var n_back_sequence = {
+    //   timeline: [color_trial, pic_trial],
+    //   timeline_variables: color_stimuli, pic_stimuli,
+    //   repetitions: Nblocks,
+    //   sample: {
+    //     type: 'with-replacement',
+    //     size: images.length,
+    //     weights: [2, 1]
+    //   },
+    //   loop_function: function(){ // return true to go to next trial
+    //     if (repeat == true) {
+    //       return true
+    //     } else {
+    //       return false
+    //     }b
+    //   }
+    // }
 
-    var test_procedure={
-      timeline: [test, color_trial],
-      timeline_variables: _stimuli, n_back_trials,
+    var n_back_sequence={
+      timeline: [pic_trial, color_trial],
+      timeline_variables: pic_stimuli, color_stimuli,
       randomize_order:true,
       repetitions: Nblocks,
     }
 
-    timeline.push(test_procedure);
+    timeline.push(n_back_sequence);
 
 
     /*********** END EXPERIMENT ***********/

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>My experiment</title>
+    <title>Pilot TloadDback</title>
     <script src="jspsych/jspsych.js"></script>
     <script src="jspsych/plugins/jspsych-html-keyboard-response.js"></script>
     <script src="jspsych/plugins/jspsych-image-keyboard-response.js"></script>
@@ -43,32 +43,111 @@
     var all_images = [];
 
 
-    var instructions_1 = {
-      type: 'html-button-response',
-      stimulus: '<div style="width: 800px;">'+
-        '<p>This experiment will test your ability to hold information in short-term, temporary memory. This is called working memory.</p>'+
-        '</div>',
-      choices: ["Continue"]
-    };
-    timeline.push(instructions_1);
 
-    var instructions_2 = {
+    /********************************************************
+    define the individual events that make up the experiment
+    ********************************************************/
+
+    /*********** welcome message ***********/
+    // End the experiment if browser is not Chrome or Firefox
+
+    var welcome_message = ['<p>Welkom bij dit experiment.</p>' + '<p> Duw op Volgende om te beginnen.</p>'];
+    var not_supported_message = ['<p>This experiment requires the Chrome or Firefox webbrowser.</p>'];
+
+    var welcome = {
+      type: "instructions",
+      pages: welcome_message,
+      show_clickable_nav: true,
+      button_label_previous: "Vorige",
+      button_label_next: "Volgende",
+      on_start: function(trial){
+        if (bowser.name == 'Firefox' || bowser.name == 'Chrome'){
+          trial.pages = welcome_message;
+        } else {
+          trial.pages = not_supported_message;
+          setTimeout(function(){location.href="html/not_supported.html"}, 2000);
+        }
+      }
+    };
+
+    /*********** informed consent ***********/
+    var consent = {
+      type: 'instructions',
+      pages: ['<p>Geef je je consent? </p>'],
+      show_clickable_nav: true,
+      button_label_next: "Akkoord",
+      allow_backward: false,
+      on_finish: function(data){
+          var subjID = jsPsych.randomization.randomID(); // generate random ID to be used in file name
+          jsPsych.data.addProperties({
+            subjID: subjID
+          });
+      }
+    };
+
+    /*********** Name ***********/
+    var ask_name = { 
+      type: 'survey-text',
+      questions: [
+        {prompt: "Zet muziek, gsm en andere afleidingen uit. Voeg hier uw naam in (de data wordt anoniem opgeslagen) ", required: true}],
+        button_label: 'Volgende',
+      on_finish: function(data) {
+        var responses = JSON.parse(data.responses);
+        var name_surname = responses.Q0; 
+        jsPsych.data.addProperties({
+          name_surname: name_surname,
+          amount_counterbalance: amount_counterbalance
+        });
+      }
+    };
+
+        /*********** fullscreen mode ***********/
+        var fullscreen_mode = {
+      message: ["<p>Het experiment zal in fullscreen modus gaan wanneer u op Volgende duwt.</p>"],
+      button_label: 'Volgende',
+      type: 'fullscreen',
+      fullscreen_mode: true
+    };
+
+    // get age and nationality
+    var age_nationality = {
+      type: 'survey-text',
+      questions: [
+        {prompt: "Leeftijd"},
+        {prompt: "Nationaliteit"}],
+      on_finish: function(data) {
+        var responses = JSON.parse(data.responses);
+        var age = responses.Q0;
+        var nationality = responses.Q1;
+        jsPsych.data.addProperties({
+          age: age,
+          nationality: nationality
+        });
+      }
+    };
+ 
+    // instructions
+    var instructions = {
       type: 'html-button-response',
       stimulus: '<div style="width: 800px;">'+
-        '<p>You will see a sequence of images. Your task is to determine if the image on the screen matches '+
-        'the image that appeared two images before.</p>'+
-        '<p>If the images is match <span style="font-weight: bold;">press the J key.</span></p>'+
-        '<p>For example, if you saw the sequence X, O, V, X, V, O, you would press the J key when the second V appeared on the screen.</p>'+
-        '<p>You do not need to press any key when there is not a match.</p>'+
+        '<p>Dit experiment test je vermogen om informatie in je korte termijn geheugen op te slaan.</p>'+
+        '<p>Je zal een serie afbeeldingen zien. Jouw taak is om te zien of de huidige afbeelding'+
+        'Dezelfde is als twee afbeeldingen terug</p>'+
+        '<p>Als ze hetzelfde zijn, <span style="font-weight: bold;">Duw op J.</span></p>'+
+        '<p>bijvoorbeeld, als je deze serie zou krijgen: X, O, V, X, V, O, dan moet je op J duwen wanneer de tweede V verschijnt.</p>'+
+        '<p>Als de afbeeldingen niet matchen, moet je geen knop induwen.</p>'+
         '</div>',
-      choices: ["Continue"],
+      choices: ["Volgende"],
       on_finish: function () {
         accuracy_percentage = jsPsych.randomization.sampleWithReplacement(accuracy_percentage, 1); // choose random accuracy percentage
         console.log (accuracy_percentage);
         startTime = new Date(); //start clock
       },
     };
-    timeline.push(instructions_2);
+
+    // informed consent and demographic information
+    var consent_demo = [welcome, consent, ask_name, fullscreen_mode, age_nationality, instructions];
+
 
 
     var n_back_trial = {
@@ -158,7 +237,18 @@
       }
     };
     
-
+    //final debrief
+    var final_debrief = {
+      type: 'html-keyboard-response',
+      stimulus: 'none',
+      on_start: function(final_debrief){
+        final_debrief.stimulus = "<p>Dit is het einde van het experiment. Bedankt voor uw deelname!</p>" +
+        "<p>In deze studie zijn we geïnteresseerd in het manipuleren van mentale vermoeidheid</p>" +
+        "<p>We zullen analyseren hoe dit samenhangt met uw prestaties op de psychomotor vigilance task.</p>" +
+        "<p>U bent enorm bedankt voor uw bijdrage in dit onderzoek. Indien u nog vragen hebt, contacteer dan de onderzoeker: sofie.raeymakers@ugent.be</p>";
+      },
+      choices: jsPsych.NO_KEYS
+    };
     
     /********************************************************
     add individual events into the timeline variable
@@ -186,15 +276,74 @@
         }
       }
     }
-    timeline.push(n_back_sequence);
 
+    timeline.push (consent_demo);
+    timeline.push(n_back_sequence);
+    timeline.push(final_debrief);
+
+  /********************************************************
+    run the experiment
+  ********************************************************/
+
+      // function that appends data to an existing file (or creates the file if it does not exist)
+    function appendData(filename, filedata) {
+
+      $.ajax({ // make sure jquery-1.7.1.min.js is loaded in the html header for this to work
+        type: 'post',
+        cache: false,
+        url: 'php/save_data_append.php', // IMPORTANT: change the php script to link to the directory of your server where you want to store the data!
+        data: {
+          filename: filename,
+          filedata: filedata
+        },
+      });
+    };
+
+    // create a string that contains extra information to be saved
+    var extra_info_string = '';
+
+    for (var i = 0; i < extra_info.length; i ++) {
+      extra_info_string += extra_info[i] + ',';
+    }
+
+    // add the data that need to be saved
+    var data_string = '';
 
     /* start the experiment */
     jsPsych.init({
         timeline: timeline,
         preload_images: images,
-        on_finish: function() {
-        jsPsych.data.displayData()}
+      // see if participants are switching tabs/apps
+      on_interaction_data_update:function(data){
+        jsPsych.data.get().addToLast(data);
+      },
+      exclusions: {
+        min_width: 800,
+        min_height: 600
+      },
+      on_data_update: function(data){
+      if (online){
+        var subjID = jsPsych.data.get().last(1).values()[0]['subjID']; // get subjectID
+        if (data.trial_index == 2){ // write header
+          var data_row = "name_surname, age, nationality, trial_index, stimulus, response, match, correct_resp, accuracy, prop_correct, minutes\n";
+          appendData('PilotTloadDback_main'+ subjID +'.csv', data_row);
+        }
+
+        // append data when the task property in data is 'test'
+        if (data.phase == 'test'){
+          var data_row = data.name_surname + ',' + data.age + ',' + data.nationality + ',' + data.trial_index + ',' +
+                         data.stimulus + ',' + data.response + ',' + data.match + ',' + data.correct_resp + ',' + data.accuracy + ',' +
+                         data.prop_correct + ',' + data.minutes + '\n';
+          appendData('PilotTloadDback_main_'+ subjID +'.csv', data_row);
+        }
+      },
+    },
+        on_finish: function() { //if not online it will save all data locally
+        if (!online){
+          jsPsych.data.get().localSave('csv','mydata.csv');
+          jsPsych.data.displayData();
+        }
+    }
     });
   </script>
 </html>

@@ -33,8 +33,8 @@
     /* create timeline */
     var timeline = [];
 
-    Nblocks= 1; //this is not that important, since the experiment will always end after exp_duration
-    trial_gap = 200;
+    Nrepeats= 3; //this is not that important, since the experiment will always end after exp_duration
+    trial_gap = 500;
     trial_dur= 500;
     var accuracy_percentage = [0.75, 0.70, 0.65, 0.60, 0.55]; //possible percentages for pilot accuracy
     var exp_duration= 0.1; // how many minutes experiment may last 
@@ -169,28 +169,24 @@
 
     /** pic trial **/
 
-    var pic_stimuli = [
-      { stimulus: 'img/comb.png', correct_response: 'f'},
-      { stimulus: 'img/glass.png', correct_response: 'f'},
-      { stimulus: 'img/key.png', correct_response: 'f'},
-      { stimulus: 'img/pear.png', correct_response: 'f'},
-      { stimulus: "img/house.png", correct_response: 'j'},
-      { stimulus: "img/plane.png", correct_response: 'j'},
-      { stimulus: "img/truck.png", correct_response: 'j'},
-      { stimulus: "img/elephant.png", correct_response: 'j'}
-    ];
-
     var pic_trial = {
       type: 'image-keyboard-response',
-      stimulus: jsPsych.timelineVariable('stimulus'),
+      stimulus: function (){
+        var randomKey = Math.floor(Math.random() * 8);
+        var pic = pics[randomKey];
+        sequence.push(pic);
+      return pic},
       choices: ['f', 'j'],
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
       data: {
-        correct_response: jsPsych.timelineVariable('correct_response')
       },
       on_finish: function(data){
-        data.correct=jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        if (data.stimulus.includes('comb'||'glass'||'key'||'pear')){data.correct_response= 'f';
+        } else {data.correct_response= 'j'};
+        console.log('pic_correct_response:',data.correct_response);
+        data.accuracy=jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        console.log('pic_accuracy:',data.accuracy);
       }
     };
 
@@ -198,7 +194,7 @@
     /** color trial **/
     var color_stimuli = [  
        {match: true, correct_resp:' '},
-       {match: false, correct_resp: 'j'}
+       {match: false, correct_resp: null}
      ];
 
     var color_trial = {
@@ -209,7 +205,7 @@
         } else {
           if(jsPsych.timelineVariable('match', true) == true){ //on match trials, the pic is the same as the pic (how_many_back)
             var pic = sequence[sequence.length - how_many_back];
-          } else {
+          } else { // on non-match trials, pic is DIFFERENT image
             var possible_images = jsPsych.randomization.sampleWithoutReplacement(images, 2);
             if(possible_images[0] != sequence[sequence.length - how_many_back]){
               var pic = possible_images[0];
@@ -221,13 +217,13 @@
         sequence.push(pic);
         return pic
       },
-      choices: ['','j'],
+      choices: [' '],
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
       response_ends_trial: false,
       data: {
         match: jsPsych.timelineVariable('match'),
-        // phase: 'test',
+        phase: 'test',
         correct_resp: jsPsych.timelineVariable('correct_resp')
       },
       on_finish: function(data){
@@ -248,17 +244,17 @@
         //   trial_dur= trial_dur +25
         // };
         // console.log('prop_correct:',data.prop_correct)
-        console.log ('trial_dur:',trial_dur);
-        endTime = new Date();
-        var timeDiff = endTime - startTime;
-        timeDiff /=1000;
-        var minutes = (timeDiff)/60;
-        console.log('minutes passed:',minutes);
-        data.minutes = minutes;
-        if (minutes > exp_duration){
-          repeat = false
-        };
-        console.log('repeat:',repeat);
+        // console.log ('trial_dur:',trial_dur);
+        // endTime = new Date();
+        // var timeDiff = endTime - startTime;
+        // timeDiff /=1000;
+        // var minutes = (timeDiff)/60;
+        // console.log('minutes passed:',minutes);
+        // data.minutes = minutes;
+        // if (minutes > exp_duration){
+        //   repeat = false
+        // };
+        // console.log('repeat:',repeat);
       }
     }
 
@@ -307,11 +303,11 @@
     //   }
     // }
 
-    var n_back_sequence={
-      timeline: [color_trial],
-      timeline_variables: pic_stimuli, color_stimuli,
+    var n_back_sequence = {
+      timeline: [pic_trial, color_trial],
+      timeline_variables: color_stimuli,
       randomize_order:true,
-      repetitions: Nblocks,
+      repetitions: Nrepeats,
     }
 
     timeline.push(n_back_sequence);

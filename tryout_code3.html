@@ -184,6 +184,8 @@
       type: 'image-keyboard-response',
       stimulus: jsPsych.timelineVariable('stimulus'),
       choices: ['f', 'j'],
+      trial_duration: trial_dur,
+      post_trial_gap: trial_gap,
       data: {
         correct_response: jsPsych.timelineVariable('correct_response')
       },
@@ -195,7 +197,7 @@
     
     /** color trial **/
     var color_stimuli = [  
-       {match: true, correct_resp: ' '},
+       {match: true, correct_resp:' '},
        {match: false, correct_resp: null}
      ];
 
@@ -222,22 +224,21 @@
       choices: [' '],
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
-      response_ends_trial: false,
+      response_ends_trial:false,
       data: {
         match: jsPsych.timelineVariable('match'),
         // phase: 'test',
-        correct_resp: jsPsych.timelineVariable('correct_resp') 
+        correct_resp: jsPsych.timelineVariable('correct_resp')
       },
       on_finish: function(data){
-        data.correct=jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
-        // var acc = false;
-        // if (data.response == data.correct_resp ) {
-        //   acc= true;
-        // }
-        // data.accuracy= acc;
-        // console.log('correct_resp:',data.correct_resp);
-        // console.log('response:',data.response);
-        // console.log('accuracy:',data.accuracy);
+        var acc = false;
+        if (data.response == data.correct_resp ) {
+          acc= true;
+        }
+        data.accuracy= acc;
+        console.log('correct_resp:',data.correct_resp);
+        console.log('response:',data.response);
+        console.log('accuracy:',data.accuracy);
         // var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
         // var n_correct = last_trials.filter({accuracy:true}).count();
         // data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
@@ -247,17 +248,17 @@
         //   trial_dur= trial_dur +25
         // };
         // console.log('prop_correct:',data.prop_correct)
-        // console.log ('trial_dur:',trial_dur);
-        // endTime = new Date();
-        // var timeDiff = endTime - startTime;
-        // timeDiff /=1000;
-        // var minutes = (timeDiff)/60;
-        // console.log('minutes passed:',minutes);
-        // data.minutes = minutes;
-        // if (minutes > exp_duration){
-        //   repeat = false
-        // };
-        // console.log('repeat:',repeat);
+        console.log ('trial_dur:',trial_dur);
+        endTime = new Date();
+        var timeDiff = endTime - startTime;
+        timeDiff /=1000;
+        var minutes = (timeDiff)/60;
+        console.log('minutes passed:',minutes);
+        data.minutes = minutes;
+        if (minutes > exp_duration){
+          repeat = false
+        };
+        console.log('repeat:',repeat);
       }
     }
 
@@ -307,7 +308,7 @@
     // }
 
     var n_back_sequence={
-      timeline: [pic_trial, color_trial],
+      timeline: [color_trial],
       timeline_variables: pic_stimuli, color_stimuli,
       randomize_order:true,
       repetitions: Nblocks,

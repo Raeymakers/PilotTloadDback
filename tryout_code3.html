@@ -198,7 +198,7 @@
     /** color trial **/
     var color_stimuli = [  
        {match: true, correct_resp:' '},
-       {match: false, correct_resp: null}
+       {match: false, correct_resp: 'j'}
      ];
 
     var color_trial = {
@@ -221,7 +221,7 @@
         sequence.push(pic);
         return pic
       },
-      choices: [' '],
+      choices: ['','j'],
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
       response_ends_trial: false,

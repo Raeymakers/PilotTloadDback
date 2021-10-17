@@ -21,7 +21,7 @@
   <body></body>
   <script>
 
-//// THIS VERSION has swit
+//// THIS VERSION has switch
  
     /********************************************************
     define some variables
@@ -50,14 +50,12 @@
 
     /*********** define images used ***********/
 
-    // different colored images
+    // different colored balls
     var images = ['img/blue.png', 'img/red.png', 'img/yellow.png', 'img/green.png', 'img/pink.png', 'img/purple.png', 'img/black.png', 'img/white.png'];
-    
-    // different pictures
+    // different pictures (big and small ones)
     var pics = ['img/comb.png', 'img/glass.png', 'img/pear.png', 'img/key.png','img/elephant.png', 'img/house.png', 'img/truck.png', 'img/plane.png'];
-
     // all images that will be preloaded at start experiment
-    var all_images =['img/blue.png', 'img/red.png', 'img/yellow.png', 'img/green.png', 'img/pink.png', 'img/purple.png', 'img/black.png', 'img/white.png','img/comb.png', 'img/glass.png', 'img/pear.png', 'img/key.png','img/elephant.png', 'img/house.png', 'img/truck.png', 'img/plane.png'];
+    var all_images =[images, pics];
 
     /********************************************************
     define the individual events that make up the experiment
@@ -187,7 +185,6 @@
       stimulus: jsPsych.timelineVariable('stimulus'),
       choices: ['f', 'j'],
       data: {
-        task: 'response',
         correct_response: jsPsych.timelineVariable('correct_response')
       },
       on_finish: function(data){
@@ -198,8 +195,8 @@
     
     /** color trial **/
     var color_stimuli = [  
-       {match: true, correct_resp: " " [1]},
-       {match: false, correct_resp: null}
+       {match: true, correct_response: 'space'},
+       {match: false, correct_response: null}
      ];
 
     var color_trial = {
@@ -222,44 +219,45 @@
         sequence.push(pic);
         return pic
       },
-      choices: [" " [1]],
+      choices: ['space'],
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
       response_ends_trial: false,
       data: {
         match: jsPsych.timelineVariable('match'),
         phase: 'test',
-        correct_resp: jsPsych.timelineVariable('correct_resp'), 
+        correct_response: jsPsych.timelineVariable('correct_response') 
       },
       on_finish: function(data){
-        var acc = false;
-        if (data.response == data.correct_resp ) {
-          acc= true;
-        }
-        data.accuracy= acc;
-        console.log('correct_resp:',data.correct_resp);
-        console.log('response:',data.response);
-        console.log('accuracy:',data.accuracy);
-        var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
-        var n_correct = last_trials.filter({accuracy:true}).count();
-        data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
-        if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
-          trial_dur = trial_dur - 25
-        } else if (data.prop_correct <accuracy_percentage) {
-          trial_dur= trial_dur +25
-        };
-        console.log('prop_correct:',data.prop_correct)
-        console.log ('trial_dur:',trial_dur);
-        endTime = new Date();
-        var timeDiff = endTime - startTime;
-        timeDiff /=1000;
-        var minutes = (timeDiff)/60;
-        console.log('minutes passed:',minutes);
-        data.minutes = minutes;
-        if (minutes > exp_duration){
-          repeat = false
-        };
-        console.log('repeat:',repeat);
+        data.correct=jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        // var acc = false;
+        // if (data.response == data.correct_resp ) {
+        //   acc= true;
+        // }
+        // data.accuracy= acc;
+        // console.log('correct_resp:',data.correct_resp);
+        // console.log('response:',data.response);
+        // console.log('accuracy:',data.accuracy);
+        // var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
+        // var n_correct = last_trials.filter({accuracy:true}).count();
+        // data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
+        // if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
+        //   trial_dur = trial_dur - 25
+        // } else if (data.prop_correct <accuracy_percentage) {
+        //   trial_dur= trial_dur +25
+        // };
+        // console.log('prop_correct:',data.prop_correct)
+        // console.log ('trial_dur:',trial_dur);
+        // endTime = new Date();
+        // var timeDiff = endTime - startTime;
+        // timeDiff /=1000;
+        // var minutes = (timeDiff)/60;
+        // console.log('minutes passed:',minutes);
+        // data.minutes = minutes;
+        // if (minutes > exp_duration){
+        //   repeat = false
+        // };
+        // console.log('repeat:',repeat);
       }
     }
 

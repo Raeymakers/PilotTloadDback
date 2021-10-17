@@ -225,11 +225,11 @@
       response_ends_trial: false,
       data: {
         match: jsPsych.timelineVariable('match'),
-        phase: 'test',
-        correct_response: jsPsych.timelineVariable('correct_resp') 
+        // phase: 'test',
+        correct_resp: jsPsych.timelineVariable('correct_resp') 
       },
       on_finish: function(data){
-        data.correct=jsPsych.pluginAPI.compareKeys(data.response, data.correct_resp);
+        data.correct=jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
         // var acc = false;
         // if (data.response == data.correct_resp ) {
         //   acc= true;

@@ -64,17 +64,16 @@
 
     /*************  WELCOME DEMO   ******************/
 
-    /** welcome message **/
+        /** Name + put out music **/
     // End the experiment if browser is not Chrome or Firefox
-    var welcome_message = ['<p>Welkom bij dit experiment.</p>' + '<p> Duw op Volgende om te beginnen.</p>'];
+    var welcome_message = ['<h3>Welcome to this experiment</h3>' + '<p> Put out music and other distractions</p>'];
     var not_supported_message = ['<p>This experiment requires the Chrome or Firefox webbrowser.</p>'];
 
     var welcome = {
       type: "instructions",
       pages: welcome_message,
       show_clickable_nav: true,
-      button_label_previous: "Vorige",
-      button_label_next: "Volgende",
+      button_label_next: "Next",
       on_start: function(trial){
         if (bowser.name == 'Firefox' || bowser.name == 'Chrome'){
           trial.pages = welcome_message;
@@ -82,54 +81,26 @@
           trial.pages = not_supported_message;
           setTimeout(function(){location.href="html/not_supported.html"}, 2000);
         }
-      }
-    };
-
-    /** informed consent **/
-    var consent = {
-      type: 'instructions',
-      pages: ['<p>Geef je je consent? </p>'],
-      show_clickable_nav: true,
-      button_label_next: "Akkoord",
-      allow_backward: false,
-      on_finish: function(data){
-          var subjID = jsPsych.randomization.randomID(); // generate random ID to be used in file name
-          jsPsych.data.addProperties({
-            subjID: subjID
-          });
-      }
-    };
-
-    /** Name + put out music **/
-    var ask_name = { 
-      type: 'survey-text',
-      questions: [
-        {prompt: "Zet muziek, gsm en andere afleidingen uit. Voeg hier uw naam in (de data wordt anoniem opgeslagen) ", required: true}],
-        button_label: 'Volgende',
+      },
       on_finish: function(data) {
         var responses = JSON.parse(data.responses);
         var name_surname = responses.Q0; 
         jsPsych.data.addProperties({
-          name_surname: name_surname,
-          amount_counterbalance: amount_counterbalance
+          name_surname: name_surname
         });
+        var subjID = jsPsych.randomization.randomID(); // generate random ID to be used in file name
+          jsPsych.data.addProperties({
+            subjID: subjID
+       });
       }
-    };
-
-    /** fullscreen mode **/
-    var fullscreen_mode = {
-      message: ["<p>Het experiment zal in fullscreen modus gaan wanneer u op Volgende duwt.</p>"],
-      button_label: 'Volgende',
-      type: 'fullscreen',
-      fullscreen_mode: true
     };
 
     /** age + nationality **/
     var age_nationality = {
       type: 'survey-text',
       questions: [
-        {prompt: "Leeftijd"},
-        {prompt: "Nationaliteit"}],
+        {prompt: "Age"},
+        {prompt: "Nationality"}],
       on_finish: function(data) {
         var responses = JSON.parse(data.responses);
         var age = responses.Q0;
@@ -140,19 +111,40 @@
         });
       }
     };
+
+    /** fullscreen mode **/
+    var fullscreen_mode = {
+      message: ["<p>The experiment will go to fullscreen mode when you press 'Next'.</p>"],
+      button_label: 'Next',
+      type: 'fullscreen',
+      fullscreen_mode: true
+    };
  
     /** instructions **/
+
     var instructions = {
-      type: 'html-button-response',
-      stimulus: '<div style="width: 800px;">'+
-        '<p>Dit experiment test je vermogen om informatie in je korte termijn geheugen op te slaan.</p>'+
-        '<p>Je zal een serie afbeeldingen zien. Jouw taak is om te zien of de huidige afbeelding'+
-        'Dezelfde is als twee afbeeldingen terug</p>'+
-        '<p>Als ze hetzelfde zijn, <span style="font-weight: bold;">Duw op J.</span></p>'+
-        '<p>bijvoorbeeld, als je deze serie zou krijgen: X, O, V, X, V, O, dan moet je op J duwen wanneer de tweede V verschijnt.</p>'+
-        '<p>Als de afbeeldingen niet matchen, moet je geen knop induwen.</p>'+
-        '</div>',
-      choices: ["Volgende"],
+      type: "instructions",
+      pages: ['<div style="width: 800px;">'+
+        '<h1>Instructions</h1>'+
+        '<h2>How will the experiment work? </h2>'+
+        '<p>Throughout this experiment you will see a series'+
+        'of coloured balls and pictures</p>'+
+        '<h3>Pictures </h3>'+
+        '<p>There are pictures of small and big objects </p>'+
+        '<p> if the object is small (pear, key, glass or comb): <span style="font-weight: bold;">Press J.</span></p>'+
+        '<p> if the object is big (house, elephant, plane or truck): <span style="font-weight: bold;">Press F.</span></p>'+
+        '<img src="img/instr_1.png", style="height:200px;width:250px;"></img>',
+        '<div style="width: 800px;">'+
+        '<h1>Instructions</h1>'+
+        '<h3>Balls </h3>'+
+        '<p>The coloured Balls will either be the same or a different colour than the ball before. </p>'+
+        '<p> if the ball is the same colour <span style="font-weight: bold;">Press SPACE.</span></p>'+
+        '<p> if the ball is a different colour,<span style="font-weight: bold;">do nothing</span></p>'+
+        '<img src="img/instr_2.png", style="height:200px;width:250px;"></img>',
+        '<h3>IMPORTANT! </h3>'+
+        '<p>The stimuli appear on the screen during a limited amount of time </p>'+
+        '<p>It is essential to remain focused on the task and to respond as fast as possible  </p>'],
+      show_clickable_nav: true,
       on_finish: function () {
         accuracy_percentage = jsPsych.randomization.sampleWithReplacement(accuracy_percentage, 1); // choose random accuracy percentage
         console.log (accuracy_percentage);
@@ -161,7 +153,7 @@
     };
 
     /** paste consent_demo together with different events **/
-    var consent_demo = (welcome, consent, ask_name, fullscreen_mode, age_nationality, instructions);
+    var consent_demo = {timeline: [welcome, age_nationality, fullscreen_mode, instructions]}
 
 
     /**************  ACTUAL EXPERIMENT ***************/
@@ -300,7 +292,7 @@
 
 
     var n_back_sequence = {
-      timeline: [pic_trial, color_trial],
+      timeline: [pic_trial, color_trial, feedback_cond],
       timeline_variables: color_stimuli,
       randomize_order:true,
       repetitions: Nrepeats,

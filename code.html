@@ -21,9 +21,8 @@
   <body></body>
   <script>
 
-
-
-
+//// THIS VERSION has switch
+ 
     /********************************************************
     define some variables
     ********************************************************/
@@ -34,8 +33,8 @@
     /* create timeline */
     var timeline = [];
 
-    Nblocks= 1; //this is not that important, since the experiment will always end after exp_duration
-    trial_gap = 200;
+    Nrepeats= 1; //this is not that important, since the experiment will always end after exp_duration
+    trial_gap = 500;
     trial_dur= 500;
     var accuracy_percentage = [0.75, 0.70, 0.65, 0.60, 0.55]; //possible percentages for pilot accuracy
     var exp_duration= 0.1; // how many minutes experiment may last 
@@ -51,17 +50,12 @@
 
     /*********** define images used ***********/
 
-    // different colored images
+    // different colored balls
     var images = ['img/blue.png', 'img/red.png', 'img/yellow.png', 'img/green.png', 'img/pink.png', 'img/purple.png', 'img/black.png', 'img/white.png'];
-    
-    // different pictures
+    // different pictures (big and small ones)
     var pics = ['img/comb.png', 'img/glass.png', 'img/pear.png', 'img/key.png','img/elephant.png', 'img/house.png', 'img/truck.png', 'img/plane.png'];
-
-    // all images used in the current experiment; these images will be pre-loaded at the beginning of the experiment
-
-    var all_images = [];
-
-
+    // all images that will be preloaded at start experiment
+    var all_images =[images, pics];
 
     /********************************************************
     define the individual events that make up the experiment
@@ -70,17 +64,16 @@
 
     /*************  WELCOME DEMO   ******************/
 
-    /** welcome message **/
+        /** Name + put out music **/
     // End the experiment if browser is not Chrome or Firefox
-    var welcome_message = ['<p>Welkom bij dit experiment.</p>' + '<p> Duw op Volgende om te beginnen.</p>'];
+    var welcome_message = ['<h3>Welcome to this experiment</h3>' + '<p> Put out music and other distractions</p>'];
     var not_supported_message = ['<p>This experiment requires the Chrome or Firefox webbrowser.</p>'];
 
     var welcome = {
       type: "instructions",
       pages: welcome_message,
       show_clickable_nav: true,
-      button_label_previous: "Vorige",
-      button_label_next: "Volgende",
+      button_label_next: "Next",
       on_start: function(trial){
         if (bowser.name == 'Firefox' || bowser.name == 'Chrome'){
           trial.pages = welcome_message;
@@ -88,54 +81,26 @@
           trial.pages = not_supported_message;
           setTimeout(function(){location.href="html/not_supported.html"}, 2000);
         }
-      }
-    };
-
-    /** informed consent **/
-    var consent = {
-      type: 'instructions',
-      pages: ['<p>Geef je je consent? </p>'],
-      show_clickable_nav: true,
-      button_label_next: "Akkoord",
-      allow_backward: false,
-      on_finish: function(data){
-          var subjID = jsPsych.randomization.randomID(); // generate random ID to be used in file name
-          jsPsych.data.addProperties({
-            subjID: subjID
-          });
-      }
-    };
-
-    /** Name + put out music **/
-    var ask_name = { 
-      type: 'survey-text',
-      questions: [
-        {prompt: "Zet muziek, gsm en andere afleidingen uit. Voeg hier uw naam in (de data wordt anoniem opgeslagen) ", required: true}],
-        button_label: 'Volgende',
+      },
       on_finish: function(data) {
         var responses = JSON.parse(data.responses);
         var name_surname = responses.Q0; 
         jsPsych.data.addProperties({
-          name_surname: name_surname,
-          amount_counterbalance: amount_counterbalance
+          name_surname: name_surname
         });
+        var subjID = jsPsych.randomization.randomID(); // generate random ID to be used in file name
+          jsPsych.data.addProperties({
+            subjID: subjID
+       });
       }
-    };
-
-    /** fullscreen mode **/
-    var fullscreen_mode = {
-      message: ["<p>Het experiment zal in fullscreen modus gaan wanneer u op Volgende duwt.</p>"],
-      button_label: 'Volgende',
-      type: 'fullscreen',
-      fullscreen_mode: true
     };
 
     /** age + nationality **/
     var age_nationality = {
       type: 'survey-text',
       questions: [
-        {prompt: "Leeftijd"},
-        {prompt: "Nationaliteit"}],
+        {prompt: "Age"},
+        {prompt: "Nationality"}],
       on_finish: function(data) {
         var responses = JSON.parse(data.responses);
         var age = responses.Q0;
@@ -146,19 +111,40 @@
         });
       }
     };
+
+    /** fullscreen mode **/
+    var fullscreen_mode = {
+      message: ["<p>The experiment will go to fullscreen mode when you press 'Next'.</p>"],
+      button_label: 'Next',
+      type: 'fullscreen',
+      fullscreen_mode: true
+    };
  
     /** instructions **/
+
     var instructions = {
-      type: 'html-button-response',
-      stimulus: '<div style="width: 800px;">'+
-        '<p>Dit experiment test je vermogen om informatie in je korte termijn geheugen op te slaan.</p>'+
-        '<p>Je zal een serie afbeeldingen zien. Jouw taak is om te zien of de huidige afbeelding'+
-        'Dezelfde is als twee afbeeldingen terug</p>'+
-        '<p>Als ze hetzelfde zijn, <span style="font-weight: bold;">Duw op J.</span></p>'+
-        '<p>bijvoorbeeld, als je deze serie zou krijgen: X, O, V, X, V, O, dan moet je op J duwen wanneer de tweede V verschijnt.</p>'+
-        '<p>Als de afbeeldingen niet matchen, moet je geen knop induwen.</p>'+
-        '</div>',
-      choices: ["Volgende"],
+      type: "instructions",
+      pages: ['<div style="width: 800px;">'+
+        '<h1>Instructions</h1>'+
+        '<h2>How will the experiment work? </h2>'+
+        '<p>Throughout this experiment you will see a series'+
+        'of coloured balls and pictures</p>'+
+        '<h3>Pictures </h3>'+
+        '<p>There are pictures of small and big objects </p>'+
+        '<p> if the object is small (pear, key, glass or comb): <span style="font-weight: bold;">Press J.</span></p>'+
+        '<p> if the object is big (house, elephant, plane or truck): <span style="font-weight: bold;">Press F.</span></p>'+
+        '<img src="img/instr_1.png", style="height:200px;width:250px;"></img>',
+        '<div style="width: 800px;">'+
+        '<h1>Instructions</h1>'+
+        '<h3>Balls </h3>'+
+        '<p>The coloured Balls will either be the same or a different colour than the ball before. </p>'+
+        '<p> if the ball is the same colour <span style="font-weight: bold;">Press SPACE.</span></p>'+
+        '<p> if the ball is a different colour,<span style="font-weight: bold;">do nothing</span></p>'+
+        '<img src="img/instr_2.png", style="height:200px;width:250px;"></img>',
+        '<h3>IMPORTANT! </h3>'+
+        '<p>The stimuli appear on the screen during a limited amount of time </p>'+
+        '<p>It is essential to remain focused on the task and to respond as fast as possible  </p>'],
+      show_clickable_nav: true,
       on_finish: function () {
         accuracy_percentage = jsPsych.randomization.sampleWithReplacement(accuracy_percentage, 1); // choose random accuracy percentage
         console.log (accuracy_percentage);
@@ -167,14 +153,57 @@
     };
 
     /** paste consent_demo together with different events **/
-    var consent_demo = (welcome, consent, ask_name, fullscreen_mode, age_nationality, instructions);
-
+    var consent_demo = {timeline: [welcome, age_nationality, fullscreen_mode, instructions]}
 
 
     /**************  ACTUAL EXPERIMENT ***************/
 
-    /** trial **/
-    var n_back_trial = {
+    /** pic trial **/
+
+    var pic_trial = {
+      type: 'image-keyboard-response',
+      stimulus: function (){
+        var randomKey = Math.floor(Math.random() * 8);
+        var pic = pics[randomKey];
+        sequence.push(pic);
+      return pic},
+      choices: ['f', 'j'],
+      trial_duration: trial_dur,
+      post_trial_gap: trial_gap,
+      data: {
+        phase:'test',
+      },
+      on_finish: function(data){
+        if (data.stimulus.includes('comb'||'glass'||'key'||'pear')){data.correct_response= 'f';
+        } else {data.correct_response= 'j'};
+        console.log('pic_correct_response:',data.correct_response);
+        var acc = false;
+        if (data.response == data.correct_response) {
+          acc= true;
+        }
+        data.accuracy= acc;
+        console.log('accuracy:',data.accuracy);
+        var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
+        var n_correct = last_trials.filter({accuracy:true}).count();
+        data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
+        if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
+          trial_dur = trial_dur - 25
+        } else if (data.prop_correct <accuracy_percentage) {
+          trial_dur= trial_dur +25
+        };
+        console.log('prop_correct:',data.prop_correct)
+        console.log ('trial_dur:',trial_dur);
+      }
+    };
+
+    
+    /** color trial **/
+    var color_stimuli = [  
+       {match: true, correct_resp:' '},
+       {match: false, correct_resp: null}
+     ];
+
+    var color_trial = {
       type: 'image-keyboard-response',
       stimulus: function() {
         if(sequence.length < how_many_back){
@@ -182,7 +211,7 @@
         } else {
           if(jsPsych.timelineVariable('match', true) == true){ //on match trials, the pic is the same as the pic (how_many_back)
             var pic = sequence[sequence.length - how_many_back];
-          } else {
+          } else { // on non-match trials, pic is DIFFERENT image
             var possible_images = jsPsych.randomization.sampleWithoutReplacement(images, 2);
             if(possible_images[0] != sequence[sequence.length - how_many_back]){
               var pic = possible_images[0];
@@ -194,14 +223,14 @@
         sequence.push(pic);
         return pic
       },
-      choices: ['j'],
+      choices: [' '],
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
       response_ends_trial: false,
       data: {
         match: jsPsych.timelineVariable('match'),
         phase: 'test',
-        correct_resp: jsPsych.timelineVariable('correct_resp'), 
+        correct_resp: jsPsych.timelineVariable('correct_resp')
       },
       on_finish: function(data){
         var acc = false;
@@ -224,8 +253,7 @@
         console.log ('trial_dur:',trial_dur);
         endTime = new Date();
         var timeDiff = endTime - startTime;
-        timeDiff /=1000;
-        var minutes = (timeDiff)/60;
+        var minutes = timeDiff/60000;
         console.log('minutes passed:',minutes);
         data.minutes = minutes;
         if (minutes > exp_duration){
@@ -235,7 +263,7 @@
       }
     }
 
-    /** error message **/
+    // /** error message **/
     //message to inform participant of a mistake
     var feedback_message = {
       type: 'html-keyboard-response',
@@ -261,21 +289,19 @@
     };
     
     /** construct timeline **/
-    var n_back_trials = [  
-      {match: true, correct_resp: 'j'},
-      {match: false, correct_resp: null}
-    ];
+
 
     var n_back_sequence = {
-      timeline: [n_back_trial, feedback_cond],
-      timeline_variables: n_back_trials,
-      repetitions: Nblocks,
+      timeline: [pic_trial, color_trial, feedback_cond],
+      timeline_variables: color_stimuli,
+      randomize_order:true,
+      repetitions: Nrepeats,
       sample: {
         type: 'with-replacement',
         size: images.length,
         weights: [2, 1]
       },
-      loop_function: function(){
+      loop_function: function(){ // return true to go to next trial
         if (repeat == true) {
           return true
         } else {
@@ -308,20 +334,20 @@
     // add individual events to the timeline variable
     timeline.push (consent_demo);
     timeline.push(n_back_sequence);
-    timeline.push(final_debrief);
+    // timeline.push(final_debrief);
 
-    /**** function that appends data to an existing file (or creates the file if it does not exist) *****/
-    function appendData(filename, filedata) {
-      $.ajax({ // make sure jquery-1.7.1.min.js is loaded in the html header for this to work
-        type: 'post',
-        cache: false,
-        url: 'php/save_data_append.php', // IMPORTANT: change the php script to link to the directory of your server where you want to store the data!
-        data: {
-          filename: filename,
-          filedata: filedata
-        },
-      });
-    };
+    // /**** function that appends data to an existing file (or creates the file if it does not exist) *****/
+    // function appendData(filename, filedata) {
+    //   $.ajax({ // make sure jquery-1.7.1.min.js is loaded in the html header for this to work
+    //     type: 'post',
+    //     cache: false,
+    //     url: 'php/save_data_append.php', // IMPORTANT: change the php script to link to the directory of your server where you want to store the data!
+    //     data: {
+    //       filename: filename,
+    //       filedata: filedata
+    //     },
+    //   });
+    // };
 
 
     // add the data that need to be saved
@@ -330,7 +356,7 @@
     /* start the experiment */
     jsPsych.init({
         timeline: timeline,
-        preload_images: images,
+        preload_images: all_images,
       // see if participants are switching tabs/apps
       on_interaction_data_update:function(data){
         jsPsych.data.get().addToLast(data);

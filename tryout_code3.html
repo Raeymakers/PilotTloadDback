@@ -35,7 +35,7 @@
 
     Nrepeats= 1; //this is not that important, since the experiment will always end after exp_duration
     trial_gap = 500;
-    trial_dur= 500;
+    trial_dur= 700;
     var accuracy_percentage = [0.75, 0.70, 0.65, 0.60, 0.55]; //possible percentages for pilot accuracy
     var exp_duration= 0.1; // how many minutes experiment may last 
     var how_many_back = 2; // this is an N-back task
@@ -83,11 +83,6 @@
         }
       },
       on_finish: function(data) {
-        var responses = JSON.parse(data.responses);
-        var name_surname = responses.Q0; 
-        jsPsych.data.addProperties({
-          name_surname: name_surname
-        });
         var subjID = jsPsych.randomization.randomID(); // generate random ID to be used in file name
           jsPsych.data.addProperties({
             subjID: subjID
@@ -174,8 +169,8 @@
         phase:'test',
       },
       on_finish: function(data){
-        if (data.stimulus.includes('comb'||'glass'||'key'||'pear')){data.correct_response= 'f';
-        } else {data.correct_response= 'j'};
+        if (data.stimulus.includes('comb'||'glass'||'key'||'pear')){data.correct_response= 'j';
+        } else {data.correct_response= 'f'};
         console.log('pic_correct_response:',data.correct_response);
         var acc = false;
         if (data.response == data.correct_response) {
@@ -267,7 +262,7 @@
     //message to inform participant of a mistake
     var feedback_message = {
       type: 'html-keyboard-response',
-      stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
+      stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">WRONG!</span>',
       choices: jsPsych.NO_KEYS,
       trial_duration: 200
     };
@@ -282,7 +277,7 @@
         console.log('trial_index:', trial_index);
         if(accuracy==true) {
           return false;
-        } else if (trial_index<4) {
+        } else if (trial_index<4) {// never give error message during first 4 trials
           return false;
         }
       }
@@ -292,7 +287,7 @@
 
 
     var n_back_sequence = {
-      timeline: [pic_trial, color_trial, feedback_cond],
+      timeline: [pic_trial,feedback_cond, color_trial, feedback_cond],
       timeline_variables: color_stimuli,
       randomize_order:true,
       repetitions: Nrepeats,

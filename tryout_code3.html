@@ -33,7 +33,7 @@
     /* create timeline */
     var timeline = [];
 
-    Nrepeats= 3; //this is not that important, since the experiment will always end after exp_duration
+    Nrepeats= 1; //this is not that important, since the experiment will always end after exp_duration
     trial_gap = 500;
     trial_dur= 500;
     var accuracy_percentage = [0.75, 0.70, 0.65, 0.60, 0.55]; //possible percentages for pilot accuracy
@@ -164,7 +164,6 @@
     var consent_demo = (welcome, consent, ask_name, fullscreen_mode, age_nationality, instructions);
 
 
-
     /**************  ACTUAL EXPERIMENT ***************/
 
     /** pic trial **/
@@ -180,13 +179,28 @@
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
       data: {
+        phase:'test',
       },
       on_finish: function(data){
         if (data.stimulus.includes('comb'||'glass'||'key'||'pear')){data.correct_response= 'f';
         } else {data.correct_response= 'j'};
         console.log('pic_correct_response:',data.correct_response);
-        data.accuracy=jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
-        console.log('pic_accuracy:',data.accuracy);
+        var acc = false;
+        if (data.response == data.correct_response) {
+          acc= true;
+        }
+        data.accuracy= acc;
+        console.log('accuracy:',data.accuracy);
+        var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
+        var n_correct = last_trials.filter({accuracy:true}).count();
+        data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
+        if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
+          trial_dur = trial_dur - 25
+        } else if (data.prop_correct <accuracy_percentage) {
+          trial_dur= trial_dur +25
+        };
+        console.log('prop_correct:',data.prop_correct)
+        console.log ('trial_dur:',trial_dur);
       }
     };
 
@@ -235,82 +249,74 @@
         console.log('correct_resp:',data.correct_resp);
         console.log('response:',data.response);
         console.log('accuracy:',data.accuracy);
-        // var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
-        // var n_correct = last_trials.filter({accuracy:true}).count();
-        // data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
-        // if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
-        //   trial_dur = trial_dur - 25
-        // } else if (data.prop_correct <accuracy_percentage) {
-        //   trial_dur= trial_dur +25
-        // };
-        // console.log('prop_correct:',data.prop_correct)
-        // console.log ('trial_dur:',trial_dur);
-        // endTime = new Date();
-        // var timeDiff = endTime - startTime;
-        // timeDiff /=1000;
-        // var minutes = (timeDiff)/60;
-        // console.log('minutes passed:',minutes);
-        // data.minutes = minutes;
-        // if (minutes > exp_duration){
-        //   repeat = false
-        // };
-        // console.log('repeat:',repeat);
+        var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
+        var n_correct = last_trials.filter({accuracy:true}).count();
+        data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
+        if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
+          trial_dur = trial_dur - 25
+        } else if (data.prop_correct <accuracy_percentage) {
+          trial_dur= trial_dur +25
+        };
+        console.log('prop_correct:',data.prop_correct)
+        console.log ('trial_dur:',trial_dur);
+        endTime = new Date();
+        var timeDiff = endTime - startTime;
+        var minutes = timeDiff/60000;
+        console.log('minutes passed:',minutes);
+        data.minutes = minutes;
+        if (minutes > exp_duration){
+          repeat = false
+        };
+        console.log('repeat:',repeat);
       }
     }
 
     // /** error message **/
-    // //message to inform participant of a mistake
-    // var feedback_message = {
-    //   type: 'html-keyboard-response',
-    //   stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
-    //   choices: jsPsych.NO_KEYS,
-    //   trial_duration: 200
-    // };
+    //message to inform participant of a mistake
+    var feedback_message = {
+      type: 'html-keyboard-response',
+      stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 200
+    };
     
-    // //conditional to determine whether or not to display message based on accuracy trial
-    // var feedback_cond = {
-    //   timeline: [feedback_message],
-    //   conditional_function: function() {
-    //     var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
-    //     var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
-    //     console.log('accuracy:', accuracy);
-    //     console.log('trial_index:', trial_index);
-    //     if(accuracy==true) {
-    //       return false;
-    //     } else if (trial_index<4) {
-    //       return false;
-    //     }
-    //   }
-    // };
+    //conditional to determine whether or not to display message based on accuracy trial
+    var feedback_cond = {
+      timeline: [feedback_message],
+      conditional_function: function() {
+        var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
+        var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
+        console.log('accuracy:', accuracy);
+        console.log('trial_index:', trial_index);
+        if(accuracy==true) {
+          return false;
+        } else if (trial_index<4) {
+          return false;
+        }
+      }
+    };
     
     /** construct timeline **/
 
-    // var n_back_sequence = {
-    //   timeline: [color_trial, pic_trial],
-    //   timeline_variables: color_stimuli, pic_stimuli,
-    //   repetitions: Nblocks,
-    //   sample: {
-    //     type: 'with-replacement',
-    //     size: images.length,
-    //     weights: [2, 1]
-    //   },
-    //   loop_function: function(){ // return true to go to next trial
-    //     if (repeat == true) {
-    //       return true
-    //     } else {
-    //       return false
-    //     }b
-    //   }
-    // }
 
     var n_back_sequence = {
       timeline: [pic_trial, color_trial],
       timeline_variables: color_stimuli,
       randomize_order:true,
       repetitions: Nrepeats,
+      sample: {
+        type: 'with-replacement',
+        size: images.length,
+        weights: [2, 1]
+      },
+      loop_function: function(){ // return true to go to next trial
+        if (repeat == true) {
+          return true
+        } else {
+          return false
+        }
+      }
     }
-
-    timeline.push(n_back_sequence);
 
 
     /*********** END EXPERIMENT ***********/
@@ -334,8 +340,8 @@
     ********************************************************/
 
     // add individual events to the timeline variable
-    // timeline.push (consent_demo);
-    // timeline.push(n_back_sequence);
+    timeline.push (consent_demo);
+    timeline.push(n_back_sequence);
     // timeline.push(final_debrief);
 
     // /**** function that appends data to an existing file (or creates the file if it does not exist) *****/

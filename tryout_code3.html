@@ -195,8 +195,8 @@
     
     /** color trial **/
     var color_stimuli = [  
-       {match: true, correct_response: ' '},
-       {match: false, correct_response: null}
+       {match: true, correct_resp: ' '},
+       {match: false, correct_resp: null}
      ];
 
     var color_trial = {
@@ -226,10 +226,10 @@
       data: {
         match: jsPsych.timelineVariable('match'),
         phase: 'test',
-        correct_response: jsPsych.timelineVariable('correct_response') 
+        correct_response: jsPsych.timelineVariable('correct_resp') 
       },
       on_finish: function(data){
-        data.correct=jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        data.correct=jsPsych.pluginAPI.compareKeys(data.response, data.correct_resp);
         // var acc = false;
         // if (data.response == data.correct_resp ) {
         //   acc= true;

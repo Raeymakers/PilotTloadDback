@@ -2,55 +2,70 @@
 <html>
   <head>
     <title>Pilot TloadDback</title>
-    <script src="jspsych/jspsych.js"></script>
-    <script src="jspsych/plugins/jspsych-html-keyboard-response.js"></script>
-    <script src="jspsych/plugins/jspsych-image-keyboard-response.js"></script>
-    <script src="jspsych/plugins/jspsych-html-button-response.js"></script>
-    <script src="jspsych/plugins/jspsych-preload.js"></script>
-    <link href="jspsych/css/jspsych.css" rel="stylesheet" type="text/css">
+    <script src="js/jspsych/jspsych.js"></script>
+    <script src="js/jspsych/plugins/jspsych-fullscreen.js"></script>
+    <script src="js/jspsych/plugins/jspsych-instructions.js"></script>
+    <script src="js/jspsych/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="js/jspsych/plugins/jspsych-html-keyboard-multi-response.js"></script>
+    <script src="js/jspsych/plugins/jspsych-image-keyboard-response.js"></script>
+    <script src="js/jspsych/plugins/jspsych-html-button-response.js"></script>
+    <script src="js/jspsych/plugins/jspsych-survey-multi-choice.js"></script>
+    <script src="js/jspsych/plugins/jspsych-survey-likert.js"></script>
+    <script src="js/jspsych/plugins/jspsych-survey-text-beta-6.1.js"></script>
+    <script src="js/jspsych/plugins/jspsych-preload.js"></script>
+    <script src="js/jquery-1.7.1.min.js"></script> <!-- the jquery library is used to communicate with the server (to store the data) through "AJAX" and PHP -->
+    <script src="js/bowser.js"></script>  <!-- <script src="configurations/UPPSP.js"></script> -->
+    <script scr="otherJS/jquery-1.7.1.min.js"></script>
+    <link href="js/jspsych/css/jspsych.css" rel="stylesheet" type="text/css">
   </head>
   <body></body>
   <script>
 
+//// THIS VERSION has switch
+ 
+    /********************************************************
+    define some variables
+    ********************************************************/
+    var startTime, endTime;
+    var pic;
+    var sequence = [];
+
     /* create timeline */
     var timeline = [];
-
-    var startTime, endTime;
 
     Nblocks= 1; //this is not that important, since the experiment will always end after exp_duration
     trial_gap = 200;
     trial_dur= 500;
-    var accuracy_percentage = [0.75, 0.70, 0.65, 0.60, 0.55]; //possible percentages for pilot
+    var accuracy_percentage = [0.75, 0.70, 0.65, 0.60, 0.55]; //possible percentages for pilot accuracy
     var exp_duration= 0.1; // how many minutes experiment may last 
     var how_many_back = 2; // this is an N-back task
     var repeat = true;
 
-
-    var pic;
-    var sequence = [];
-
-    var how_many_back = 2;
-
+    // is the experiment running from a server or not? (this determines if data is saved on server or offline)
+    if (document.location.host) { // returns your host or null
+      var online = true;
+    } else {
+      var online = false;
+    };
 
     /*********** define images used ***********/
 
-
-    // different colored images
-    var images = ['img/blue.png', 'img/red.png', 'img/yellow.png', 'img/green.png', 'img/pink.png', 'img/purple.png', 'img/black.png', 'img/white.png','img/comb.png', 'img/glass.png', 'img/pear.png', 'img/key.png','img/elephant.png', 'img/house.png', 'img/truck.png', 'img/plane.png'];
-
-    // all images used in the current experiment; these images will be pre-loaded at the beginning of the experiment
-
-    var all_images = [];
-
-
+    // different colored balls
+    var images = ['img/blue.png', 'img/red.png', 'img/yellow.png', 'img/green.png', 'img/pink.png', 'img/purple.png', 'img/black.png', 'img/white.png'];
+    // different pictures (big and small ones)
+    var pics = ['img/comb.png', 'img/glass.png', 'img/pear.png', 'img/key.png','img/elephant.png', 'img/house.png', 'img/truck.png', 'img/plane.png'];
+    // all images that will be preloaded at start experiment
+    var all_images =[images, pics];
 
     /********************************************************
     define the individual events that make up the experiment
     ********************************************************/
 
-    /*********** welcome message ***********/
-    // End the experiment if browser is not Chrome or Firefox
 
+    /*************  WELCOME DEMO   ******************/
+
+    /** welcome message **/
+    // End the experiment if browser is not Chrome or Firefox
     var welcome_message = ['<p>Welkom bij dit experiment.</p>' + '<p> Duw op Volgende om te beginnen.</p>'];
     var not_supported_message = ['<p>This experiment requires the Chrome or Firefox webbrowser.</p>'];
 
@@ -70,7 +85,7 @@
       }
     };
 
-    /*********** informed consent ***********/
+    /** informed consent **/
     var consent = {
       type: 'instructions',
       pages: ['<p>Geef je je consent? </p>'],
@@ -85,7 +100,7 @@
       }
     };
 
-    /*********** Name ***********/
+    /** Name + put out music **/
     var ask_name = { 
       type: 'survey-text',
       questions: [
@@ -101,15 +116,15 @@
       }
     };
 
-        /*********** fullscreen mode ***********/
-        var fullscreen_mode = {
+    /** fullscreen mode **/
+    var fullscreen_mode = {
       message: ["<p>Het experiment zal in fullscreen modus gaan wanneer u op Volgende duwt.</p>"],
       button_label: 'Volgende',
       type: 'fullscreen',
       fullscreen_mode: true
     };
 
-    // get age and nationality
+    /** age + nationality **/
     var age_nationality = {
       type: 'survey-text',
       questions: [
@@ -126,7 +141,7 @@
       }
     };
  
-    // instructions
+    /** instructions **/
     var instructions = {
       type: 'html-button-response',
       stimulus: '<div style="width: 800px;">'+
@@ -145,12 +160,48 @@
       },
     };
 
-    // informed consent and demographic information
-    var consent_demo = [welcome, consent, ask_name, fullscreen_mode, age_nationality, instructions];
+    /** paste consent_demo together with different events **/
+    var consent_demo = (welcome, consent, ask_name, fullscreen_mode, age_nationality, instructions);
 
 
 
-    var n_back_trial = {
+    /**************  ACTUAL EXPERIMENT ***************/
+
+    /** pic trial **/
+
+    var pic_stimuli = [
+      { stimulus: 'img/comb.png', correct_response: 'f'},
+      { stimulus: 'img/glass.png', correct_response: 'f'},
+      { stimulus: 'img/key.png', correct_response: 'f'},
+      { stimulus: 'img/pear.png', correct_response: 'f'},
+      { stimulus: "img/house.png", correct_response: 'j'},
+      { stimulus: "img/plane.png", correct_response: 'j'},
+      { stimulus: "img/truck.png", correct_response: 'j'},
+      { stimulus: "img/elephant.png", correct_response: 'j'}
+    ];
+
+    var pic_trial = {
+      type: 'image-keyboard-response',
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      choices: ['f', 'j'],
+      trial_duration: trial_dur,
+      post_trial_gap: trial_gap,
+      data: {
+        correct_response: jsPsych.timelineVariable('correct_response')
+      },
+      on_finish: function(data){
+        data.correct=jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+      }
+    };
+
+    
+    /** color trial **/
+    var color_stimuli = [  
+       {match: true, correct_resp:' '},
+       {match: false, correct_resp: null}
+     ];
+
+    var color_trial = {
       type: 'image-keyboard-response',
       stimulus: function() {
         if(sequence.length < how_many_back){
@@ -170,14 +221,14 @@
         sequence.push(pic);
         return pic
       },
-      choices: ['j'],
+      choices: [' '],
       trial_duration: trial_dur,
       post_trial_gap: trial_gap,
       response_ends_trial: false,
       data: {
         match: jsPsych.timelineVariable('match'),
-        phase: 'test',
-        correct_resp: jsPsych.timelineVariable('correct_resp'), 
+        // phase: 'test',
+        correct_resp: jsPsych.timelineVariable('correct_resp')
       },
       on_finish: function(data){
         var acc = false;
@@ -188,15 +239,15 @@
         console.log('correct_resp:',data.correct_resp);
         console.log('response:',data.response);
         console.log('accuracy:',data.accuracy);
-        var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
-        var n_correct = last_trials.filter({accuracy:true}).count();
-        data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
-        if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
-          trial_dur = trial_dur - 25
-        } else if (data.prop_correct <accuracy_percentage) {
-          trial_dur= trial_dur +25
-        };
-        console.log('prop_correct:',data.prop_correct)
+        // var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
+        // var n_correct = last_trials.filter({accuracy:true}).count();
+        // data.prop_correct= n_correct/data.trial_index; // calculate the percentage of success
+        // if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets longer
+        //   trial_dur = trial_dur - 25
+        // } else if (data.prop_correct <accuracy_percentage) {
+        //   trial_dur= trial_dur +25
+        // };
+        // console.log('prop_correct:',data.prop_correct)
         console.log ('trial_dur:',trial_dur);
         endTime = new Date();
         var timeDiff = endTime - startTime;
@@ -211,33 +262,64 @@
       }
     }
 
+    // /** error message **/
+    // //message to inform participant of a mistake
+    // var feedback_message = {
+    //   type: 'html-keyboard-response',
+    //   stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
+    //   choices: jsPsych.NO_KEYS,
+    //   trial_duration: 200
+    // };
+    
+    // //conditional to determine whether or not to display message based on accuracy trial
+    // var feedback_cond = {
+    //   timeline: [feedback_message],
+    //   conditional_function: function() {
+    //     var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
+    //     var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
+    //     console.log('accuracy:', accuracy);
+    //     console.log('trial_index:', trial_index);
+    //     if(accuracy==true) {
+    //       return false;
+    //     } else if (trial_index<4) {
+    //       return false;
+    //     }
+    //   }
+    // };
+    
+    /** construct timeline **/
+
+    // var n_back_sequence = {
+    //   timeline: [color_trial, pic_trial],
+    //   timeline_variables: color_stimuli, pic_stimuli,
+    //   repetitions: Nblocks,
+    //   sample: {
+    //     type: 'with-replacement',
+    //     size: images.length,
+    //     weights: [2, 1]
+    //   },
+    //   loop_function: function(){ // return true to go to next trial
+    //     if (repeat == true) {
+    //       return true
+    //     } else {
+    //       return false
+    //     }b
+    //   }
+    // }
+
+    var n_back_sequence={
+      timeline: [color_trial],
+      timeline_variables: pic_stimuli, color_stimuli,
+      randomize_order:true,
+      repetitions: Nblocks,
+    }
+
+    timeline.push(n_back_sequence);
 
 
-    //message to inform participant of a mistake
-    var feedback_message = {
-      type: 'html-keyboard-response',
-      stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
-      choices: jsPsych.NO_KEYS,
-      trial_duration: 200
-    };
-    
-    //conditional to determine whether or not to display message based on accuracy trial
-    var feedback_cond = {
-      timeline: [feedback_message],
-      conditional_function: function() {
-        var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
-        var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
-        console.log('accuracy:', accuracy);
-        console.log('trial_index:', trial_index);
-        if(accuracy==true) {
-          return false;
-        } else if (trial_index<4) {
-          return false;
-        }
-      }
-    };
-    
-    //final debrief
+    /*********** END EXPERIMENT ***********/
+
+    /** final debrief **/
     var final_debrief = {
       type: 'html-keyboard-response',
       stimulus: 'none',
@@ -250,61 +332,29 @@
       choices: jsPsych.NO_KEYS
     };
     
+
     /********************************************************
-    add individual events into the timeline variable
+      run the experiment
     ********************************************************/
 
-    var n_back_trials = [  
-      {match: true, correct_resp: 'j'},
-      {match: false, correct_resp: null}
-    ];
+    // add individual events to the timeline variable
+    // timeline.push (consent_demo);
+    // timeline.push(n_back_sequence);
+    // timeline.push(final_debrief);
 
-    var n_back_sequence = {
-      timeline: [n_back_trial, feedback_cond],
-      timeline_variables: n_back_trials,
-      repetitions: Nblocks,
-      sample: {
-        type: 'with-replacement',
-        size: images.length,
-        weights: [2, 1]
-      },
-      loop_function: function(){
-        if (repeat == true) {
-          return true
-        } else {
-          return false
-        }
-      }
-    }
+    // /**** function that appends data to an existing file (or creates the file if it does not exist) *****/
+    // function appendData(filename, filedata) {
+    //   $.ajax({ // make sure jquery-1.7.1.min.js is loaded in the html header for this to work
+    //     type: 'post',
+    //     cache: false,
+    //     url: 'php/save_data_append.php', // IMPORTANT: change the php script to link to the directory of your server where you want to store the data!
+    //     data: {
+    //       filename: filename,
+    //       filedata: filedata
+    //     },
+    //   });
+    // };
 
-    timeline.push (consent_demo);
-    timeline.push(n_back_sequence);
-    timeline.push(final_debrief);
-
-  /********************************************************
-    run the experiment
-  ********************************************************/
-
-      // function that appends data to an existing file (or creates the file if it does not exist)
-    function appendData(filename, filedata) {
-
-      $.ajax({ // make sure jquery-1.7.1.min.js is loaded in the html header for this to work
-        type: 'post',
-        cache: false,
-        url: 'php/save_data_append.php', // IMPORTANT: change the php script to link to the directory of your server where you want to store the data!
-        data: {
-          filename: filename,
-          filedata: filedata
-        },
-      });
-    };
-
-    // create a string that contains extra information to be saved
-    var extra_info_string = '';
-
-    for (var i = 0; i < extra_info.length; i ++) {
-      extra_info_string += extra_info[i] + ',';
-    }
 
     // add the data that need to be saved
     var data_string = '';
@@ -312,7 +362,7 @@
     /* start the experiment */
     jsPsych.init({
         timeline: timeline,
-        preload_images: images,
+        preload_images: all_images,
       // see if participants are switching tabs/apps
       on_interaction_data_update:function(data){
         jsPsych.data.get().addToLast(data);
@@ -336,7 +386,7 @@
                          data.prop_correct + ',' + data.minutes + '\n';
           appendData('PilotTloadDback_main_'+ subjID +'.csv', data_row);
         }
-      },
+      }
     },
         on_finish: function() { //if not online it will save all data locally
         if (!online){

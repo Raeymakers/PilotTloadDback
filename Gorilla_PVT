@@ -1,0 +1,205 @@
+import gorilla = require("gorilla/gorilla");
+
+// Make sure to upload the jsPsych files you need to the resources tab.
+// This should include the main jsPsych.js, jsPsych.css and likely at least one plugin. 
+// In this case, we use the jspsych-html-keyboard-response.js plugin file.
+var jsPsych = window['jsPsych'];
+
+gorilla.ready(function(){
+
+    /* create timeline */
+    var timeline = [];
+    
+    /********************************************************
+    define some variables
+    ********************************************************/
+    var startTime, endTime;
+    var pic;
+    var sequence = [];
+
+    var Nrepeats= 1; //this is not that important, since the experiment will always end after exp_duration. more for playing with the code
+    var trial_gap = 0; // post trial gap in ms
+    var trial_dur= 1500; // trial duration in ms, this starts the same as with Borrogan et al. (2017)
+    var accuracy_percentage = [1]; //possible percentages for pilot accuracy
+    var exp_duration= 0.2; // how many minutes experiment may last. 
+    var how_many_back = 1; // this is an N-back task
+    var repeat = true;
+
+
+    /*********** define images used ***********/
+    
+    
+    // different pictures (big and small ones)
+    var comb=gorilla.stimuliURL('comb.jpg');
+    var glass=gorilla.stimuliURL('glass.jpg');
+    var pear=gorilla.stimuliURL('pear.jpg');
+    var key=gorilla.stimuliURL('key.png');
+    var elephant=gorilla.stimuliURL('elephant.jpg');
+    var house=gorilla.stimuliURL('house.jpg');
+    var truck=gorilla.stimuliURL('truck.jpg');
+    var plane=gorilla.stimuliURL('plane.jpg');
+    var pics = [comb, glass, pear, key, elephant, house, truck, plane];
+    
+    
+        //instructions
+    var Instr1 = gorilla.stimuliURL('instr_1_NL.jpg');
+    var Instr2 = gorilla.stimuliURL('instr_2_NL.jpg');
+    var Instr3 = gorilla.stimuliURL('instr_3_NL.jpg');
+    var Instr4 = gorilla.stimuliURL('instr_4_NL.jpg');
+    var Instr5 = gorilla.stimuliURL('instr_5_NL.jpg');
+    var instr= [Instr1, Instr2, Instr3, Instr4, Instr5];
+    
+    // all images that will be preloaded at start experiment
+    var all_images =[pics, instr];
+    var images = [];
+    images.push(all_images);
+
+
+    /********************************************************
+    define the individual events that make up the experiment
+    ********************************************************/
+    
+    /* define instructions */
+	    var instructions = {
+      type: "instructions",
+      pages: ["<div style='width: 1000px;'><img src='" + Instr1 + "'></img>",
+       "<div style='width: 1000px;'><img src='" + Instr2 + "'></img>",
+       "<div style='width: 1000px;'><img src='" + Instr3 + "'></img>",
+       "<div style='width: 1000px;'><img src='" + Instr4 + "'></img>",
+       "<div style='width: 1000px;'><img src='" + Instr5 + "'></img>",
+       ],
+      show_clickable_nav: true,
+      on_finish: function (data) {
+        accuracy_percentage = jsPsych.randomization.sampleWithReplacement(accuracy_percentage, 1); // choose random accuracy percentage
+        startTime = new Date(); //start clock
+      },
+    };
+    timeline.push(instructions)
+      
+      /**************  ACTUAL EXPERIMENT ***************/
+      
+   var fixation = {
+      type: 'html-keyboard-response',
+      stimulus: '<div style="font-size:60px;">  </div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 100
+    }
+    
+    var pic_trial = {
+      type: 'image-keyboard-response',
+      stimulus: function (){
+        var randomKey = Math.floor(Math.random() * 8);
+        var pic = pics[randomKey];
+        sequence.push(pic);
+      return pic},
+      choices: ['f', 'j'],
+      trial_duration: trial_dur,
+      post_trial_gap: trial_gap,
+      response_ends_trial: false,
+      data: {
+        phase:'test',
+      },
+      on_finish: function(data){
+        if (data.stimulus==comb||data.stimulus==glass||data.stimulus==pear||data.stimulus==key){data.correct_response= 'j'
+        } else {data.correct_response= 'f'};
+        var acc_pic_trial = false;
+        if (data.response == data.correct_response) {
+          acc_pic_trial = true;
+        }
+        data.accuracy_pic_trial= acc_pic_trial;//we record accuracy for pic trials seperately because of the weighted formula to determine accuracy percentage
+        data.accuracy = acc_pic_trial; //we record if correctly answered for the error message
+        var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index);
+        var n_pic_correct = last_trials.filter({accuracy_pic_trial:true}).count(); //gives number of correctly answered pic trials
+        var perc_pic = n_pic_correct - (n_pic_correct * 0.3) // pics only count for 35% of the weighted score for accuracy
+        var n_color_correct = last_trials.filter({accuracy_color_trial:true}).count(); // gives number of correctly answered color trials
+        var perc_color = n_color_correct + (n_color_correct * 0.3) // color trials count for 65%
+        data.prop_correct= (perc_pic + perc_color)/(data.trial_index-6); // calculate the percentage of success
+        if (data.prop_correct >accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets shorter
+          trial_dur = trial_dur - 100
+        } else if (data.prop_correct <accuracy_percentage) {
+          trial_dur= trial_dur // if it is under accuracy_percentage, trial duration stays the same
+        };
+        endTime = new Date(); // current time
+        var timeDiff = endTime - startTime; // time elapsed since start exp
+        var minutes = timeDiff/60000;
+        data.minutes = minutes;
+        if (minutes > exp_duration){
+          repeat = false
+        };
+      }
+    };
+    
+
+    
+     // /** error message **/
+    //message to inform participant of a mistake
+    var feedback_message = {
+      type: 'html-keyboard-response',
+      stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 200
+    };
+    
+    //conditional to determine whether or not to display message based on accuracy trial
+    var feedback_cond = {
+      timeline: [feedback_message],
+      conditional_function: function() {
+        var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
+        var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
+        console.log('accuracy:', accuracy);
+        console.log('trial_index:', trial_index);
+        if(accuracy==true) {
+          return false;
+        } else if (trial_index<6) {// never give error message during first 4 trials. trial_index starts at 4.
+          return false;
+        } else if (accuracy==false){
+          return true
+        }
+      }
+    };
+    
+
+
+    /** construct timeline **/
+    
+        /** color trial **/
+    var color_stimuli = [  
+       {match: true, correct_resp:' '},
+       {match: false, correct_resp: null}
+     ];
+
+    
+    var n_back_sequence = {
+      timeline: [fixation, pic_trial, feedback_cond],
+      timeline_variables: color_stimuli,
+      randomize_order:true,
+      repetitions: Nrepeats,
+      loop_function: function(){ // return true to go to next trial
+        if (repeat == true) {
+          return true
+        } else {
+          return false
+        }
+      }
+    }
+
+
+    /********************************************************
+      run the experiment
+    ********************************************************/
+
+    // add individual events to the timeline variable
+    timeline.push(n_back_sequence);
+
+	
+	jsPsych.init({
+		display_element: $('#gorilla')[0],
+		timeline: timeline,
+		on_data_update: function(data){
+			gorilla.metric(data);
+		},
+		on_finish: function(){
+			gorilla.finish();
+		}
+	});
+})

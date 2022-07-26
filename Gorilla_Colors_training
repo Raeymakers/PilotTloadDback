@@ -1,0 +1,217 @@
+import gorilla = require("gorilla/gorilla");
+
+// Make sure to upload the jsPsych files you need to the resources tab.
+// This should include the main jsPsych.js, jsPsych.css and likely at least one plugin. 
+// In this case, we use the jspsych-html-keyboard-response.js plugin file.
+var jsPsych = window['jsPsych'];
+
+gorilla.ready(function(){
+
+    /* create timeline */
+    var timeline = [];
+    
+    /********************************************************
+    define some variables
+    ********************************************************/
+    var startTime, endTime;
+    var pic;
+    var sequence = [];
+
+    var Nrepeats= 1; //this is not that important, since the experiment will always end after exp_duration. more for playing with the code
+    var trial_gap = 0; // post trial gap in ms
+    var trial_dur= 1500; // trial duration in ms, this starts the same as with Borrogan et al. (2017)
+    var accuracy_percentage = [1]; //possible percentages for pilot accuracy
+    var exp_duration= 0.2; // how many minutes experiment may last. 
+    var how_many_back = 1; // this is an N-back task
+    var repeat = true;
+
+
+    /*********** define images used ***********/
+    
+    
+    // different colored balls
+    var blue= gorilla.stimuliURL('blue.png');
+    var red= gorilla.stimuliURL('red.png');
+    var yellow= gorilla.stimuliURL('yellow.png');
+    var green= gorilla.stimuliURL('green.png');
+    var pink= gorilla.stimuliURL('pink.png');
+    var  purple= gorilla.stimuliURL('purple.png');
+    var black= gorilla.stimuliURL('black.png');
+    var white= gorilla.stimuliURL('white.png');
+    var balls = [blue, red, yellow, green, pink, purple, black, white];
+    
+        //instructions
+    var Instr6 = gorilla.stimuliURL('instr_7_NL.jpg');
+    var Instr7 = gorilla.stimuliURL('instr_5_NL.jpg');
+    var instr= [Instr6, Instr7];
+    
+    // all images that will be preloaded at start experiment
+    var all_images =[balls, instr];
+    var images = [];
+    images.push(all_images);
+
+
+    var images = [];
+    images.push(balls);
+
+
+    /********************************************************
+    define the individual events that make up the experiment
+    ********************************************************/
+      
+      
+    var instructions = {
+      type: "instructions",
+      pages: ["<div style='width: 1000px;'><img src='" + Instr6 + "'></img>",
+       "<div style='width: 1000px;'><img src='" + Instr7 + "'></img>",],
+      show_clickable_nav: true,
+      on_finish: function (data) {
+        accuracy_percentage = jsPsych.randomization.sampleWithReplacement(accuracy_percentage, 1); // choose random accuracy percentage
+        startTime = new Date(); //start clock
+      },
+    };
+    timeline.push(instructions)
+      
+       /**************  ACTUAL EXPERIMENT ***************/
+
+      
+   var fixation = {
+      type: 'html-keyboard-response',
+      stimulus: '<div style="font-size:60px;">  </div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 100
+    }
+
+     var color_trial = {
+      type: 'image-keyboard-response',
+      stimulus: function() {
+        if(sequence.length < how_many_back){
+          var pic = jsPsych.randomization.sampleWithoutReplacement(balls, 1)[0] //pick a random image
+        } else {
+          if(jsPsych.timelineVariable('match', true) == true){ //on match trials, the pic is the same as the pic (how_many_back)
+            var pic = sequence[sequence.length - how_many_back];
+          } else { // on non-match trials, pic is DIFFERENT image
+            var possible_images = jsPsych.randomization.sampleWithoutReplacement(balls, 2);
+            if(possible_images[0] != sequence[sequence.length - how_many_back]){
+              var pic = possible_images[0];
+            } else {
+              var pic = possible_images[1];
+            }
+          }
+        }
+        sequence.push(pic);
+        return pic
+      },
+      choices: [' '], // SPACEBAR
+      trial_duration: trial_dur,
+      response_ends_trial: false,
+      data: {
+        match: jsPsych.timelineVariable('match'),
+        phase: 'test',
+        correct_resp: jsPsych.timelineVariable('correct_resp'),
+      },
+      on_finish: function(data){
+          var acc_color_trial = false;
+        if (data.response == data.correct_resp ) {
+          acc_color_trial= true;
+        }
+        data.accuracy_color_trial= acc_color_trial;
+        data.accuracy= acc_color_trial;
+        var last_trials = jsPsych.data.get().filter({phase:'test'}).last(data.trial_index); // get data from last trials
+        var n_pic_correct = last_trials.filter({accuracy_pic_trial:true}).count(); //gives number of correctly answered pic trials
+        var perc_pic = n_pic_correct - (n_pic_correct * 0.3) // pics only count for 35% of the weighted score for accuracy
+        var n_color_correct = last_trials.filter({accuracy_color_trial:true}).count(); // gives number of correctly answered color trials
+        var perc_color = n_color_correct + (n_color_correct * 0.3) // color trials count for 65%
+        data.prop_correct= (perc_pic + perc_color)/(data.trial_index-1); // calculate the percentage of success. trial_index starts at 2(because of welcome message=1).
+        if (data.prop_correct > accuracy_percentage) { //if it is more than (accuracy_percentage), then the duration of the trial gets shorter
+          trial_dur = trial_dur - 100
+        } else if (data.prop_correct <accuracy_percentage) {
+          trial_dur= trial_dur // if it is under accuracy_percentage, trial duration stays the same
+        };
+        endTime = new Date(); // current time
+        var timeDiff = endTime - startTime; // time elapsed since start exp
+        var minutes = timeDiff/60000;
+        data.minutes = minutes;
+        if (minutes > exp_duration){
+          repeat = false
+        };
+      }
+    }
+    
+     // /** error message **/
+    //message to inform participant of a mistake
+    var feedback_message = {
+      type: 'html-keyboard-response',
+      stimulus: '<span style="color:red;font-size:50px;font-weight: bold;">FOUT!</span>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 200
+    };
+    
+    //conditional to determine whether or not to display message based on accuracy trial
+    var feedback_cond = {
+      timeline: [feedback_message],
+      conditional_function: function() {
+        var accuracy = jsPsych.data.getLastTrialData().values()[0].accuracy;
+        var trial_index = jsPsych.data.getLastTrialData().values()[0].trial_index;
+        console.log('accuracy:', accuracy);
+        console.log('trial_index:', trial_index);
+        if(accuracy==true) {
+          return false;
+        } else if (trial_index<3) {// never give error message during first 4 trials. trial_index starts at 4.
+          return false;
+        } else if (accuracy==false){
+          return true
+        }
+      }
+    };
+    
+
+
+    /** construct timeline **/
+    
+        /** color trial **/
+    var color_stimuli = [  
+       {match: true, correct_resp:' '},
+       {match: false, correct_resp: null}
+     ];
+
+    
+    var n_back_sequence = {
+      timeline: [fixation, color_trial, feedback_cond],
+      timeline_variables: color_stimuli,
+      randomize_order:true,
+      repetitions: Nrepeats,
+      sample: {
+        type: 'with-replacement',
+        size: balls.length,
+        weights: [2, 1]// to make sure that there are enough match trials
+      },
+      loop_function: function(){ // return true to go to next trial
+        if (repeat == true) {
+          return true
+        } else {
+          return false
+        }
+      }
+    }
+
+
+    /********************************************************
+      run the experiment
+    ********************************************************/
+
+    // add individual events to the timeline variable
+    timeline.push(n_back_sequence);
+
+	
+	jsPsych.init({
+		display_element: $('#gorilla')[0],
+		timeline: timeline,
+		on_data_update: function(data){
+			gorilla.metric(data);
+		},
+		on_finish: function(){
+			gorilla.finish();
+		}
+	});
+})

@@ -46,5 +46,10 @@ Keep in mind that the STD is what we are manipulating! Since the theory is that 
 For this reason, the control condition will have an accuracy_level set at 100 %, which means that each trial will last 1500 ms for the participants.  
 in the CF condition, accuracy_level will be set at (? This to be determined in pilot study). 
 
-Also different from Borrogan et al (2017) is the addition of an ERROR message. This was done because there is no training phase, and to make sure the task is engaging throughout
+Also different from Borrogan et al (2017) is the addition of an ERROR message. This was done because there is no training phase, and to make sure the task is engaging throughout.
+
+
+The applicable Javascript code can be found under 'code.html'. 
+The applicable Gorilla compatible code can be found as 'Gorilla_PilotTloadDback'
+The Gorilla compatible practice rounds for Colours and Pictures can be found as 'Gorilla_Colors_training' and 'Gorilla_Pics_Training'.
 
